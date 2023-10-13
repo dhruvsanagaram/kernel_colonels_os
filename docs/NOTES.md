@@ -5,7 +5,7 @@
 ### Loading the GDT
   - File to load from: x86_desc.S contains the empty GDB from line38
   - we need to write some connectivity stuff for having emulated Intel IA-32 processors use the GDT.
-  - 
+  - We also need to initialze the IDT
 ## Checkpoint 3.2
 
 ## Checkpoint 3.3

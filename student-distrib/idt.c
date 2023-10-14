@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 #include "idt.h"
+=======
+>>>>>>> 8d97fc1d6f4c004d0e0c06a214efef4e150e42a0
 /*
  0 #DE Divide Error Fault No DIV and IDIV instructions.
  1 #DB RESERVED Fault/
@@ -45,6 +48,10 @@ PIC Interrupts
 */
 
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 8d97fc1d6f4c004d0e0c06a214efef4e150e42a0
 void init(){
     //iterate through array of idt descriptors and init to 0
     uint32_t i;
@@ -57,6 +64,7 @@ void init(){
         else{
             idt[i].present = 0;
         }
+<<<<<<< HEAD
         idt[i].seg_selector = KERNEL_CS;
         idt[i].dpl = 0x0;
         idt[i].reserved0 = 0x0;
@@ -99,12 +107,43 @@ void init(){
     SET_IDT_ENTRY(idt[MC], machine_check);
     SET_IDT_ENTRY(idt[XF], floating_point_SIMD);
     SET_IDT_ENTRY(idt[R], onwards_20);
+=======
+    }
+
+    //populate idt with exceptions 
+    //Finish this once Sagnik is done writing enum
+    SET_IDT_ENTRY(idt[DE], "divide error");
+    SET_IDT_ENTRY(idt[DB], "divide error");
+    SET_IDT_ENTRY(idt[NMI], "divide error");
+    SET_IDT_ENTRY(idt[BP], "divide error");
+    SET_IDT_ENTRY(idt[OF], "divide error");
+    SET_IDT_ENTRY(idt[BR], "divide error");
+    SET_IDT_ENTRY(idt[UD], "divide error");
+    SET_IDT_ENTRY(idt[NM], "divide error");
+    SET_IDT_ENTRY(idt[DF], "divide error");
+    SET_IDT_ENTRY(idt[SO], "divide error");
+    SET_IDT_ENTRY(idt[TS], "divide error");
+    SET_IDT_ENTRY(idt[NP], "divide error");
+    SET_IDT_ENTRY(idt[SS], "divide error");
+    SET_IDT_ENTRY(idt[GP], "divide error");
+    SET_IDT_ENTRY(idt[PF], "divide error");
+    SET_IDT_ENTRY(idt[E15], "divide error");
+    SET_IDT_ENTRY(idt[MF], "divide error");
+    SET_IDT_ENTRY(idt[AC], "divide error");
+    SET_IDT_ENTRY(idt[MC], "divide error");
+    SET_IDT_ENTRY(idt[XF], "divide error");
+    SET_IDT_ENTRY(idt[R], "divide error");
+
+
+
+>>>>>>> 8d97fc1d6f4c004d0e0c06a214efef4e150e42a0
 
     //populate idt with system call handlers
     SET_IDT_ENTRY(idt[SYSCALL_VEC], "system call");
     
     //populate idt with device interrupts -- keyboard, rtc, pic
     //Do we register the PIC with the idt and port-address each device or connect each device?
+<<<<<<< HEAD
     lidt(idt_desc_ptr);
 }
 
@@ -208,4 +247,6 @@ void floating_point_SIMD(){
 void onwards_20(){
     printf("reserved by intel");
     halt(255);
+=======
+>>>>>>> 8d97fc1d6f4c004d0e0c06a214efef4e150e42a0
 }

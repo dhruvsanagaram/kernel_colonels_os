@@ -25,7 +25,7 @@ _start:
 
 continue:
     # Load the GDT
-    lgdt gdt_descriptor     # Load the GDT base address (label gdt_desc) into the GDTR reg
+    lgdt gdt_desc     # Load the GDT base address (label gdt_desc) into the GDTR reg
     # lidt idt_desc_ptr # Load the IDT base address into the LDTR register (label acts as the ptr)
     # Load CS with the new descriptor value
     ljmp    $KERNEL_CS, $keep_going

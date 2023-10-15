@@ -1,7 +1,4 @@
-<<<<<<< HEAD
 #include "idt.h"
-=======
->>>>>>> 8d97fc1d6f4c004d0e0c06a214efef4e150e42a0
 /*
  0 #DE Divide Error Fault No DIV and IDIV instructions.
  1 #DB RESERVED Fault/
@@ -47,36 +44,31 @@ PIC Interrupts
 
 */
 
+#define NUM_EXCEPTIONS 21
+#define INTEL_RESERVED 15
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 8d97fc1d6f4c004d0e0c06a214efef4e150e42a0
 void init(){
     //iterate through array of idt descriptors and init to 0
     uint32_t i;
-    int numExceptions = 21;
-    int intelReserved = 15;
     for(i = 0; i < NUM_VEC; i++){
-        if(i < 21 && i != intelReserved){
-            idt[i].present = 1;
+        if(i < NUM_EXCEPTIONS && i != INTEL_RESERVED){
+            idt[i].present = 1; //make valid IDT entry
         }
         else{
             idt[i].present = 0;
         }
-<<<<<<< HEAD
         idt[i].seg_selector = KERNEL_CS;
         idt[i].dpl = 0x0;
         idt[i].reserved0 = 0x0;
-        idt[i].reserved1 = 0x1;
-        idt[i].reserved2 = 0x1;
+        idt[i].reserved1 = 0x1; //sets gate type to 16-bit int gate
+        idt[i].reserved2 = 0x1; //sets gate type to 16-bit int gate
         idt[i].reserved3 = 0x0;
         idt[i].reserved4 = 0x0;
         idt[i].size = 0x1;
     }
 
     //set syscall entry to userspace callable (dpl set to 0x3)
-    idt[SYSCALL_VEC].reserved3 = 1;
+    idt[SYSCALL_VEC].reserved3 = 1; 
     idt[SYSCALL_VEC].dpl = 0x3;
     idt[SYSCALL_VEC].present = 1;
 
@@ -107,43 +99,17 @@ void init(){
     SET_IDT_ENTRY(idt[MC], machine_check);
     SET_IDT_ENTRY(idt[XF], floating_point_SIMD);
     SET_IDT_ENTRY(idt[R], onwards_20);
-=======
-    }
-
-    //populate idt with exceptions 
-    //Finish this once Sagnik is done writing enum
-    SET_IDT_ENTRY(idt[DE], "divide error");
-    SET_IDT_ENTRY(idt[DB], "divide error");
-    SET_IDT_ENTRY(idt[NMI], "divide error");
-    SET_IDT_ENTRY(idt[BP], "divide error");
-    SET_IDT_ENTRY(idt[OF], "divide error");
-    SET_IDT_ENTRY(idt[BR], "divide error");
-    SET_IDT_ENTRY(idt[UD], "divide error");
-    SET_IDT_ENTRY(idt[NM], "divide error");
-    SET_IDT_ENTRY(idt[DF], "divide error");
-    SET_IDT_ENTRY(idt[SO], "divide error");
-    SET_IDT_ENTRY(idt[TS], "divide error");
-    SET_IDT_ENTRY(idt[NP], "divide error");
-    SET_IDT_ENTRY(idt[SS], "divide error");
-    SET_IDT_ENTRY(idt[GP], "divide error");
-    SET_IDT_ENTRY(idt[PF], "divide error");
-    SET_IDT_ENTRY(idt[E15], "divide error");
-    SET_IDT_ENTRY(idt[MF], "divide error");
-    SET_IDT_ENTRY(idt[AC], "divide error");
-    SET_IDT_ENTRY(idt[MC], "divide error");
-    SET_IDT_ENTRY(idt[XF], "divide error");
-    SET_IDT_ENTRY(idt[R], "divide error");
-
-
-
->>>>>>> 8d97fc1d6f4c004d0e0c06a214efef4e150e42a0
 
     //populate idt with system call handlers
     SET_IDT_ENTRY(idt[SYSCALL_VEC], "system call");
     
     //populate idt with device interrupts -- keyboard, rtc, pic
+    idt[KEYB_IRQ_NO].present = 1;
+    idt[KEYB_IRQ_NO].reserved3 = 1; //set third LSB to 1 which sets gate type to 32-bit INT gate
+    idt[RTC_IRQ_NO].present = 1;
+    idt[RTC_IRQ_NO].reserved3 = 1;
+
     //Do we register the PIC with the idt and port-address each device or connect each device?
-<<<<<<< HEAD
     lidt(idt_desc_ptr);
 }
 
@@ -247,6 +213,4 @@ void floating_point_SIMD(){
 void onwards_20(){
     printf("reserved by intel");
     halt(255);
-=======
->>>>>>> 8d97fc1d6f4c004d0e0c06a214efef4e150e42a0
 }

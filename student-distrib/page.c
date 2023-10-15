@@ -1,16 +1,18 @@
 #include "page.h"
 
-void init_dir_entry(page_dir_entry_t *entry, uint32_t user, uint32_t present, uint32_t offset) {
-    entry->user = user;
-    entry->present = present;
-    entry->base_addr = offset;
-    entry->rw = 1;
-    entry->write_through = 0;
-    entry->cache_disable = 0;
-    entry->accessed = 0;
-    entry->ps_bit = 1;
-    entry->reserved = 0;
-}
+extern void enable(int directory);
+
+// void init_dir_entry(page_dir_entry_t *entry, uint32_t user, uint32_t present, uint32_t offset) {
+    // page_direcctory[i].user = user;
+    // page_direcctory[i].present = present;
+    // page_direcctory[i].base_addr = offset;
+    // page_direcctory[i].rw = 1;
+    // page_direcctory[i].write_through = 0;
+    // page_direcctory[i].cache_disable = 0;
+    // page_direcctory[i].accessed = 0;
+    // page_direcctory[i].ps_bit = 1;
+    // page_direcctory[i].reserved = 0;
+// }
 
 
 
@@ -20,7 +22,7 @@ void page_init() {
     //init first 4MB of the dir with 4kb pages
     page_directory[0].user = 0;
     page_directory[0].present = 1;
-    page_directory[0].base_addr = ((uint32_t)page_tables/FOUR_KB);
+    page_directory[0].base_addr = page_tables / FOUR_KB;
     page_directory[0].rw = 1;
     page_directory[0].write_through = 0;
     page_directory[0].cache_disable = 0;
@@ -32,14 +34,40 @@ void page_init() {
     for (i = 1; i < PAGE_SIZE; i++) {
         if(i == KERNEL_IDX){
           //set up kernel memory
-          init_dir_entry(&page_directory[i], 0, 1, ((uint32_t)KERNEL_ADDR / FOUR_KB));
+          //init_dir_entry(&page_directory[i], 0, 1, ((uint32_t)KERNEL_ADDR / FOUR_KB));
+          page_directory[i].user = 0;
+          page_directory[i].present = 1;
+          page_directory[i].base_addr = KERNEL_ADDR / FOUR_KB;
+          page_directory[i].rw = 1;
+          page_directory[i].write_through = 0;
+          page_directory[i].cache_disable = 0;
+          page_directory[i].accessed = 0;
+          page_directory[i].ps_bit = 1;
+          page_directory[i].reserved = 0;
         }
         else if (i == USER_IDX) {
           //set up user virtual memory
-          init_dir_entry(&page_directory[i], 1, 1, ((uint32_t)USER_ADDR / FOUR_KB));
-        } else {
+          // init_dir_entry(&page_directory[i], 1, 1, ((uint32_t)USER_ADDR / FOUR_KB));
+          page_directory[i].user = 1;
+          page_directory[i].present = 1;
+          page_directory[i].base_addr = USER_ADDR / FOUR_KB;
+          page_directory[i].rw = 1;
+          page_directory[i].write_through = 0;
+          page_directory[i].cache_disable = 0;
+          page_directory[i].accessed = 0;
+          page_directory[i].ps_bit = 1;
+          page_directory[i].reserved = 0;       
+        } 
+        else {
           //set up remaining memory
-          init_dir_entry(&page_directory[i], 0, 0, 0);
+          page_directory[i].user = 0;
+          page_directory[i].present = 0;
+          page_directory[i].rw = 1;
+          page_directory[i].write_through = 0;
+          page_directory[i].cache_disable = 0;
+          page_directory[i].accessed = 0;
+          page_directory[i].ps_bit = 1;
+          page_directory[i].reserved = 0;
         }
     }
     
@@ -77,7 +105,8 @@ void page_init() {
       page_video_map[i].dirty = 0;
       page_video_map[i].reserved = 0;
       page_video_map[i].global = 0;
-      page_video_map[i].base_addr = ((uint32_t)VIDEO_ADDR/FOUR_KB);
+      // page_video_map[i].base_addr = ((uint32_t)VIDEO_ADDR/FOUR_KB);
+      page_video_map[i].base_addr = i;
     }  
     
 } 

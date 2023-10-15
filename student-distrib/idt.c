@@ -1,4 +1,6 @@
 #include "idt.h"
+#include "x86_desc.h"
+#include "lib.h"
 /*
  0 #DE Divide Error Fault No DIV and IDIV instructions.
  1 #DB RESERVED Fault/
@@ -44,10 +46,35 @@ PIC Interrupts
 
 */
 
+void divide_by_zero();
+void reserved_fault();
+void non_maskable_interrupt();
+void breakpoint();
+void overflow();
+void bounds_range();
+void undefined_opcode();
+void device_unavailable();
+void double_fault();
+void segment_overrun();
+void invalid_tss();
+void segment_not_present();
+void stack_segfault();
+void gen_protection();
+void page_fault();
+void intel_reserved();
+void floating_point_x87();
+void machine_check();
+void alignment_check();
+void floating_point_SIMD();
+void onwards_20();
+
+
+
 #define NUM_EXCEPTIONS 21
 #define INTEL_RESERVED 15
 
 void init(){
+
     //iterate through array of idt descriptors and init to 0
     uint32_t i;
     for(i = 0; i < NUM_VEC; i++){
@@ -78,27 +105,27 @@ void init(){
     * to the SET_IDT_ENTRY macro the handler ptr
     */
     //Finish this once Sagnik is done writing enum
-    SET_IDT_ENTRY(idt[DE], divide_error);
-    SET_IDT_ENTRY(idt[DB], reserved_fault);
-    SET_IDT_ENTRY(idt[NMI], non_maskable_interrupt);
-    SET_IDT_ENTRY(idt[BP], breakpoint);
-    SET_IDT_ENTRY(idt[OF], overflow);
-    SET_IDT_ENTRY(idt[BR], bounds_range);
-    SET_IDT_ENTRY(idt[UD], undefined_opcode);
-    SET_IDT_ENTRY(idt[NM], device_unavailable);
-    SET_IDT_ENTRY(idt[DF], double_fault);
-    SET_IDT_ENTRY(idt[SO], segment_overrun);
-    SET_IDT_ENTRY(idt[TS], invalid_tss);
-    SET_IDT_ENTRY(idt[NP], segment_not_present);
-    SET_IDT_ENTRY(idt[SS], stack_segfault);
-    SET_IDT_ENTRY(idt[GP], gen_protection);
-    SET_IDT_ENTRY(idt[PF], page_fault);
-    SET_IDT_ENTRY(idt[E15], intel_reserved);
-    SET_IDT_ENTRY(idt[MF], floating_point_87);
-    SET_IDT_ENTRY(idt[AC], alignment_check);
-    SET_IDT_ENTRY(idt[MC], machine_check);
-    SET_IDT_ENTRY(idt[XF], floating_point_SIMD);
-    SET_IDT_ENTRY(idt[R], onwards_20);
+    SET_IDT_ENTRY(idt[0], divide_by_zero);
+    SET_IDT_ENTRY(idt[1], reserved_fault);
+    SET_IDT_ENTRY(idt[2], non_maskable_interrupt);
+    SET_IDT_ENTRY(idt[3], breakpoint);
+    SET_IDT_ENTRY(idt[4], overflow);
+    SET_IDT_ENTRY(idt[5], bounds_range);
+    SET_IDT_ENTRY(idt[6], undefined_opcode);
+    SET_IDT_ENTRY(idt[7], device_unavailable);
+    SET_IDT_ENTRY(idt[8], double_fault);
+    SET_IDT_ENTRY(idt[9], segment_overrun);
+    SET_IDT_ENTRY(idt[10], invalid_tss);
+    SET_IDT_ENTRY(idt[11], segment_not_present);
+    SET_IDT_ENTRY(idt[12], stack_segfault);
+    SET_IDT_ENTRY(idt[13], gen_protection);
+    SET_IDT_ENTRY(idt[14], page_fault);
+    SET_IDT_ENTRY(idt[15], intel_reserved);
+    SET_IDT_ENTRY(idt[16], floating_point_x87);
+    SET_IDT_ENTRY(idt[17], alignment_check);
+    SET_IDT_ENTRY(idt[18], machine_check);
+    SET_IDT_ENTRY(idt[19], floating_point_SIMD);
+    SET_IDT_ENTRY(idt[20], onwards_20);
 
     //populate idt with system call handlers
     SET_IDT_ENTRY(idt[SYSCALL_VEC], "system call");
@@ -115,102 +142,107 @@ void init(){
 
 
 ///create the appropriate funcs here for each exception
-void divide_error(){
+void divide_by_zero(){
     printf("Divide by Zero");
-    halt(255);
+    while(1);
 }
 
 void reserved_fault(){
     printf("Debug Error");
-    halt(255);
+    while(1);
 }
 
 void non_maskable_interrupt(){
     printf("Non-Maskable Interrupt");
-    halt(255);
+    while(1);
 }
 
 void breakpoint(){
     printf("Breakpoint");
-    halt(255);
+    while(1);
 }
 
 void overflow(){
     printf("Overflow Trap");
-    halt(255);
+    while(1);
 }
 
 void bounds_range(){
     printf("Bound Range Exceeded");
-    halt(255);
+    while(1);
 }
 
 void undefined_opcode(){
     printf("Undefined opcode encountered");
-    halt(255);
+    while(1);
 }
 
 void device_unavailable(){
     printf("Device is not available");
-    halt(255);
+    while(1);
 }
 
 void double_fault(){
     printf("double fault encountered");
-    halt(255);
+    while(1);
 }
 
 void segment_overrun(){
     printf("segment overrun fault");
-    halt(255);
+    while(1);
 }
 
 void invalid_tss(){
     printf("Invalid TSS Fault");
-    halt(255);
+    while(1);
 }
 
 void segment_not_present(){
     printf("Segment not present");
-    halt(255);
+    while(1);
 }
 
 void stack_segfault(){
     printf("segmentation fault");
-    halt(255);
+    while(1);
 }
 
 void gen_protection(){
     printf("general protection compromised");
-    halt(255);
+    while(1);
+}
+
+void page_fault(){
+    printf("page fault");
+    while(1);
 }
 
 void intel_reserved(){
     printf("reserved by intel");
-    halt(255);
+    while(1);
 }
 
-void floating_point_87(){
+void floating_point_x87(){
     printf("x87 floating point exception");
-    halt(255);
+    while(1);
 }
 
 void alignment_check(){
     printf("Alignment Check encountered");
-    halt(255);
+    while(1);
 }
 
 void machine_check(){
     printf("Machine check encountered");
-    halt(255);
+    while(1);
 }
 
 void floating_point_SIMD(){
     printf("SIMD floating point exception");
-    halt(255);
+    while(1);
 }
 
 void onwards_20(){
     printf("reserved by intel");
-    halt(255);
+    while(1);
 }

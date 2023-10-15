@@ -17,13 +17,13 @@ enable: # Pass in page address
     # this is the PSE bit (bit 5)
     movl %eax, %cr4 //write to cr4
 
-    #See: https://wiki.osdev.org/CPU_Registers_x86
+    # See: https://wiki.osdev.org/CPU_Registers_x86
 
-    lmswl %eax #read from cr0 for writing
-    #Paging and protection bits set
+    lmswl %eax # read from cr0 for writing
+    # Paging and protection bits set
     orl $0x80000001, %eax #set the MSB and LSB to 1
     # this sets Paging:31 (PG) and protection:0 (PE) bits
-    smswl %eax #update cr0
+    smswl %eax # update cr0
     
     # flush the TLB
     movl %cr3, %eax

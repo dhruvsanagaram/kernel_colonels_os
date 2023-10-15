@@ -3,7 +3,7 @@
 
 #ifndef ASM
 
-#include <lib.h>
+#include "lib.h" //used to be <lib.h>
 #include "i8259.h"
 
 #define NUM_EXCEPTIONS 21
@@ -12,29 +12,31 @@
 #define KEYB_IRQ_NO 0x21
 #define RTC_IRQ_NO 0x28
 
+
 typedef enum idt_entry_t {
-  DE; //divide by 0
-  DB; //RESERVED fault
-  NMI; //non maskable interrupt
-  BP; //breakpoint exception
-  OF; //overflow trap
-  BR; //BOUND range exceeded
-  UD; //undefinde opcode
-  NM; //No math coprocessor/device unavail
-  DF; //double fault
-  SO; //Segment Overrun
-  TS; //Invalid TSS Fault
-  NP; //Segment not present
-  SS; //Stack segment fault
-  GP; //general protection fault
-  PF; //page fault
-  E15; //reserved by intel
-  MF; //x87 floating point exception
-  AC; //alignment check exception
-  MC; //machine check exception
-  XF; //SIMD floating point exception
-  R; //20 onwards reserved
+    DE; //divide by 0
+    DB; //RESERVED fault
+    NMI; //non maskable interrupt
+    BP; //breakpoint exception
+    OF; //overflow trap
+    BR; //BOUND range exceeded
+    UD; //undefinde opcode
+    NM; //No math coprocessor/device unavail
+    DF; //double fault
+    SO; //Segment Overrun
+    TS; //Invalid TSS Fault
+    NP; //Segment not present
+    SS; //Stack segment fault
+    GP; //general protection fault
+    PF; //page fault
+    E15; //reserved by intel
+    MF; //x87 floating point exception
+    AC; //alignment check exception
+    MC; //machine check exception
+    XF; //SIMD floating point exception
+    R; //20 onwards reserved
 } idt_entry_t;
+
 
 // struct reg_t {
 //   uint32_t edi;
@@ -55,27 +57,6 @@ void init(void);
 // void general_interrupt(void);
 
 ///// exception handlers /////
-void divide_by_zero();
-void reserved_fault();
-void non_maskable_interrupt();
-void breakpoint();
-void overflow();
-void bounds_range();
-void undefined_opcode();
-void device_unavailable();
-void double_fault();
-void segment_overrun();
-void invalid_tss();
-void segment_not_present();
-void stack_segfault();
-void gen_protection();
-void intel_reserved();
-void floating_point_x87();
-void machine_check();
-void alignment_check();
-void floating_point_SIMD();
-void onwards_20();
-
 
 #endif /* ASM */
 

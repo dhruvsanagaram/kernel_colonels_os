@@ -30,7 +30,6 @@ void page_init() {
     page_directory[0].ps_bit = 0;
     page_directory[0].reserved = 0;
 
-
     for (i = 1; i < PAGE_SIZE; i++) {
         if(i == KERNEL_IDX){
           //set up kernel memory

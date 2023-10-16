@@ -1,6 +1,8 @@
 #include "idt.h"
 #include "x86_desc.h"
 #include "lib.h"
+#include "rtc.h"
+#include "keyboard.h"
 /*
  0 #DE Divide Error Fault No DIV and IDIV instructions.
  1 #DB RESERVED Fault/
@@ -67,6 +69,9 @@ void machine_check();
 void alignment_check();
 void floating_point_SIMD();
 void onwards_20();
+void syscall_handler();
+void rtc_handler();
+void keyb_handler();
 
 
 
@@ -135,6 +140,9 @@ void init(){
     idt[KEYB_IRQ_NO].reserved3 = 1; //set third LSB to 1 which sets gate type to 32-bit INT gate
     idt[RTC_IRQ_NO].present = 1;
     idt[RTC_IRQ_NO].reserved3 = 1;
+
+    SET_IDT_ENTRY(idt[RTC_IRQ_NO], rtc_handler);
+    SET_IDT_ENTRY(idt[KEYB_IRQ_NO], keyb_main);
 
     //Do we register the PIC with the idt and port-address each device or connect each device?
     lidt(idt_desc_ptr);
@@ -245,4 +253,19 @@ void floating_point_SIMD(){
 void onwards_20(){
     printf("reserved by intel");
     while(1);
+}
+
+void syscall_handler(){
+    printf("Syscall detected");
+    while(1);
+}
+
+void rtc_handler(){
+    rtc_handle();
+    
+    // while(1);
+}
+
+void keyb_handler(){
+    keyb_main();
 }

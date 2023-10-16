@@ -65,8 +65,13 @@ void disable_irq(uint32_t irq_num) { //Adapted from OSDEV
 
 /* Send end-of-interrupt signal for the specified IRQ */
 void send_eoi(uint32_t irq_num) { //Adapted from OSDEV for 8259 PIC https://wiki.osdev.org/PIC
-    if (irq_num >= 8) {
-		outb(SLAVE_8259_PORT,EOI);
+    if (irq_num >= 16) {
+      return;
     }
-	outb(MASTER_8259_PORT,EOI);
+    if (irq_num >= 8) {
+		  outb(EOI | irq_num - 8,SLAVE_8259_PORT);
+      outb(EOI | 2, MASTER_8259_PORT);
+      return;
+    }
+	outb(EOI | irq_num, MASTER_8259_PORT);
 }

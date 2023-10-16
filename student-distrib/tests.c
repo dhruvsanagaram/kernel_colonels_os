@@ -175,6 +175,13 @@ void rtc_test() {
 	asm volatile ("int	$0x28");
 }
 
+// void kbtest() {
+// 	TEST_HEADER;
+// 	while(1) {
+// 		keyb_main();
+// 	}
+// }
+
 /* Checkpoint 2 tests */
 /* Checkpoint 3 tests */
 /* Checkpoint 4 tests */
@@ -185,8 +192,8 @@ void rtc_test() {
 void launch_tests(){
 	//TEST_OUTPUT("idt_test", idt_test());
 	// launch your tests here
-	TEST_OUTPUT("divide_test", divide_test());
-	//rtc_test();
-	//test_interrupts();
-	//TEST_OUTPUT("page_test_kbefore", page_test_kbefore());
+	//TEST_OUTPUT("divide_test", divide_test());
+	rtc_test();
+	//TEST_OUTPUT("page_test_null", page_test_NULL());
+	// kbtest();
 }

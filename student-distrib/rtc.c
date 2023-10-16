@@ -30,7 +30,9 @@ void rtc_handle(void){
     inb(RTC_PORT_DATA);
 
     ///
-    printf("ADFASGJAJSAJGJ");
+    printf("ADFASGJAJSAJGJ\n");
+    /// call test_interrupts for handling
+    test_interrupts();
     
     send_eoi(RTC_IRQ);
 }

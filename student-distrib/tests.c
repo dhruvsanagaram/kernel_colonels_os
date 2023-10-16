@@ -77,8 +77,11 @@ int idt_test(){
 
 int page_test_NULL() {
 	TEST_HEADER;
-	char test;
-	test = *(char*)NULL;
+	//char test;
+	//test = *(char*)NULL;
+
+	char * x = NULL;
+	char y = *x;
 	return FAIL;
 }
 
@@ -171,16 +174,29 @@ int page_test_all() {
 	return PASS;
 }
 
-void rtc_test() {
-	asm volatile ("int	$0x28");
+int alltest() {
+	TEST_HEADER;
+	int i;
+	char test;
+	for (i=0x400000; i < 0x800000; i++) {
+		test = *(char*)i;
+	}
+	return PASS;
 }
 
-// void kbtest() {
-// 	TEST_HEADER;
-// 	while(1) {
-// 		keyb_main();
-// 	}
-// }
+void rtc_test() {
+	asm volatile ("int	$0x28");
+	while(1){
+		test_interrupts();
+	}
+}
+
+void kbtest() {
+	TEST_HEADER;
+	while(1) {
+		keyb_main();
+	}
+}
 
 /* Checkpoint 2 tests */
 /* Checkpoint 3 tests */
@@ -193,7 +209,10 @@ void launch_tests(){
 	//TEST_OUTPUT("idt_test", idt_test());
 	// launch your tests here
 	//TEST_OUTPUT("divide_test", divide_test());
-	rtc_test();
+	//rtc_test();
 	//TEST_OUTPUT("page_test_null", page_test_NULL());
-	// kbtest();
+	//kbtest();
+	TEST_OUTPUT("alltest", alltest());
+	//TEST_OUTPUT("page_test_kbefore", page_test_kbefore());
+	TEST_OUTPUT("page_test_vbefore", page_test_vbefore());
 }

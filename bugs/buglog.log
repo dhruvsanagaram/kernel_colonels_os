@@ -9,23 +9,113 @@ Authors:
     sagnik3, dhruvs7, arasha3, rct4
 
 <================================================================>
+                              BUG 7
+<================================================================>
+problem: Page fault was not being reached for edge cases in page testing
+
+fix: There was a stack imbalance in our asm routine for enabling
+     the paging because of a stack imbalance at the beginning
+
+resolved by: sagnik3
+
+Time: 2 hours
+
+<================================================================>
+                              BUG 6
+<================================================================>
+problem: General protection fault thrown after typing first char
+into keyboard.
+
+fix: Before we were simply cli() before doing the keyboard logic.
+We cleared and saved the flags which allowed the RTC to keep interrupting
+the keyboard, preventing the exception from being thrown.
+
+resolved by: rct4
+
+Time: 2 hours
+
+<================================================================>
+                              BUG 5
+<================================================================>
+problem: General protection fault thrown before keyboard press.
+
+fix: Initially the bounds for which we mapped the input to the set_2_table
+were incorrect -- we were initially checking that the user input was greater 
+than or equal to 0. This allowed the putc(0) to occur, which throws 
+an exception. We changed the bounds to >= 2 and this prevented this 
+exception from occuring
+
+resolved by: rct4
+
+Time: 2 hours
+
+
+<================================================================>
+                              BUG 4
+<================================================================>
+problem: The real-time-clock test was only displaying the image once
+rather than updating every time the rtc_handler was invoked
+
+fix: Initially we were not looping when calling test_interrupts() which means 
+that the video memory was only being updated once, not every time the 
+real-time-clock interrupt handler was firing off. Putting this video memory
+update call in a while loop allowed the changes in the real-time-clock to
+be reflected. We also fixed the PIC logic to initialize the master
+PIC first and the slave PIC second rather than interweaving that logic.
+
+resolved by: sagnik3 & dhruvs7
+
+Time: 3 hours
+
+
+<================================================================>
+                              BUG 3
+<================================================================>
+problem: Text-mode images were not showing up on the screen when the 
+RTC handler was invoked.
+
+fix: We realized that the RTC interrupt handler was being invoked independently
+but we were never reflecting the changes made by the RTC in the video memory.
+After adding a test_interrupts() call these changes were reflected ultimately.
+
+resolved by: dhruvs7 & sagnik3
+
+Time: 1 hour
+
+
+
+<================================================================>
+                              BUG 2
+<================================================================>
+problem: The struct fields for the page directory and page table entries 
+were not being recognized by the compiler.
+
+fix: We linked the types.h to the paging script which ensured that the types
+were recognized by the compiler
+resolved by: sagnik3
+
+Time: 1 hour
+
+
+
+<================================================================>
                               BUG 1
 <================================================================>
-problem:
+problem: The assembly script for enabling paging 
+         was not being recognized by the compiler
 
-fix:
+fix: We realized that because the scripts had the same name (page.c and page.S),
+     the compiler was writing them to the same object, so we renamed page.S to
+     paging.S
 
-resolved by:
+resolved by: dhruvs7
 
-commmit (if any):
-
-Time:
-
+Time: 1.5 hours
 
 <================================================================>
 <======================>   CHECKPOINT 2   <======================>
 <================================================================>
-Assignment:
+Assignment: 
     MP3
 Checkpoint:
     CP2

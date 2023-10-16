@@ -27,6 +27,9 @@
  * to declare the interrupt finished */
 #define EOI                 0x60
 
+//the inital active high state of masks
+#define IRQ_MASK                0xFF
+
 /* Externally-visible functions */
 
 /* Initialize both PICs */

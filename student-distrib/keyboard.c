@@ -16,12 +16,15 @@ void keyb_init(void){
     enable_irq(1);
 }
 void keyb_main(void){ //interrupt
-    cli();
+    uint32_t flags;
+    cli_and_save(flags);
     uint32_t userin, kb_status;
     kb_status = inb(KEYB_STAT);
     if (kb_status & 0x01) {
         userin = inb(KEYB_IRQ_P);
-        if(userin <= 0x81 && userin > 0) { // release key
+        // userin = 9;
+        //printf("userin: %d", userin);
+        if(userin <= 0x35 && userin >= 0x02) { // release key
             char ascii_cur = set_2_table[userin];
             if (ascii_cur) {
                 putc(ascii_cur);
@@ -32,4 +35,5 @@ void keyb_main(void){ //interrupt
     // data,port
     send_eoi(0x01);
     sti();
+    restore_flags(flags);
 }

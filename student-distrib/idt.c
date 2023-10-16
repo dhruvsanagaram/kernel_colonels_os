@@ -75,6 +75,7 @@ void keyb_handler();
 
 
 
+
 #define NUM_EXCEPTIONS 21
 #define INTEL_RESERVED 15
 
@@ -100,7 +101,7 @@ void init(){
     }
 
     //set syscall entry to userspace callable (dpl set to 0x3)
-    idt[SYSCALL_VEC].reserved3 = 1; 
+    // idt[SYSCALL_VEC].reserved3 = 1;
     idt[SYSCALL_VEC].dpl = 0x3;
     idt[SYSCALL_VEC].present = 1;
 
@@ -133,13 +134,30 @@ void init(){
     SET_IDT_ENTRY(idt[20], onwards_20);
 
     //populate idt with system call handlers
-    SET_IDT_ENTRY(idt[SYSCALL_VEC], "system call");
+    SET_IDT_ENTRY(idt[SYSCALL_VEC], syscall_handler);  //add assembly linkage later
     
     //populate idt with device interrupts -- keyboard, rtc, pic
+    idt[KEYB_IRQ_NO].seg_selector = KERNEL_CS;
     idt[KEYB_IRQ_NO].present = 1;
-    idt[KEYB_IRQ_NO].reserved3 = 1; //set third LSB to 1 which sets gate type to 32-bit INT gate
+    idt[KEYB_IRQ_NO].reserved3 = 0; //set third LSB to 1 which sets gate type to 32-bit INT gate
+    idt[KEYB_IRQ_NO].reserved4 = 0;
+    idt[KEYB_IRQ_NO].reserved2 = 1;
+    idt[KEYB_IRQ_NO].reserved1 = 1;
+    idt[KEYB_IRQ_NO].size = 1;
+    idt[KEYB_IRQ_NO].reserved0 = 0;
+    idt[KEYB_IRQ_NO].dpl = 0;
+    idt[KEYB_IRQ_NO].present = 1;
+
+    idt[RTC_IRQ_NO].seg_selector = KERNEL_CS;
     idt[RTC_IRQ_NO].present = 1;
-    idt[RTC_IRQ_NO].reserved3 = 1;
+    idt[RTC_IRQ_NO].reserved3 = 0;
+    idt[RTC_IRQ_NO].reserved4 = 0;
+    idt[RTC_IRQ_NO].reserved2 = 1;
+    idt[RTC_IRQ_NO].reserved1 = 1;
+    idt[RTC_IRQ_NO].size = 1;
+    idt[RTC_IRQ_NO].reserved0 = 0;
+    idt[RTC_IRQ_NO].dpl = 0;
+    idt[RTC_IRQ_NO].present = 1;
 
     SET_IDT_ENTRY(idt[RTC_IRQ_NO], rtc_handler);
     SET_IDT_ENTRY(idt[KEYB_IRQ_NO], keyb_main);
@@ -167,7 +185,7 @@ void non_maskable_interrupt(){
 
 void breakpoint(){
     printf("Breakpoint");
-    while(1);
+    // while(1);
 }
 
 void overflow(){
@@ -262,10 +280,10 @@ void syscall_handler(){
 
 void rtc_handler(){
     rtc_handle();
-    
     // while(1);
 }
 
 void keyb_handler(){
     keyb_main();
 }
+

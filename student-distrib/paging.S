@@ -6,10 +6,6 @@ enable: # Pass in page address
     pushl %ebp
     movl %esp, %ebp
     movl 8(%ebp), %eax
-
-    # pushl %ebx
-    # pushl %esi
-    # pushl %edi
     
     movl %eax, %cr3
 

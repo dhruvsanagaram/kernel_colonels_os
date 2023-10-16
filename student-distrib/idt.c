@@ -79,38 +79,45 @@ void keyb_handler();
 #define NUM_EXCEPTIONS 21
 #define INTEL_RESERVED 15
 
+/* void init();
+ * Inputs: N/A
+ * Return Value: void
+ *  Function: Init idt descriptors and set idt entries for exceptions/sys calls/devices */
 void init(){
 
     //iterate through array of idt descriptors and init to 0
     uint32_t i;
     for(i = 0; i < NUM_VEC; i++){
         if(i < NUM_EXCEPTIONS && i != INTEL_RESERVED){
-            idt[i].present = 1; //make valid IDT entry
+            idt[i].present = 1;                 //make valid IDT entry
+            idt[i].seg_selector = KERNEL_CS;
+            idt[i].dpl = 0x0;
+            idt[i].reserved0 = 0x0;
+            idt[i].reserved1 = 0x1;             //sets gate type to 16-bit int gate
+            idt[i].reserved2 = 0x1;             //sets gate type to 16-bit int gate
+            idt[i].reserved3 = 0x0;
+            idt[i].reserved4 = 0x0;
+            idt[i].size = 0x1;
         }
         else{
             idt[i].present = 0;
+            idt[i].seg_selector = KERNEL_CS;
+            idt[i].dpl = 0x0;
+            idt[i].reserved0 = 0x0;
+            idt[i].reserved1 = 0x1;             //sets gate type to 16-bit int gate
+            idt[i].reserved2 = 0x1;             //sets gate type to 16-bit int gate
+            idt[i].reserved3 = 0x0;
+            idt[i].reserved4 = 0x0;
+            idt[i].size = 0x1;
         }
-        idt[i].seg_selector = KERNEL_CS;
-        idt[i].dpl = 0x0;
-        idt[i].reserved0 = 0x0;
-        idt[i].reserved1 = 0x1; //sets gate type to 16-bit int gate
-        idt[i].reserved2 = 0x1; //sets gate type to 16-bit int gate
-        idt[i].reserved3 = 0x0;
-        idt[i].reserved4 = 0x0;
-        idt[i].size = 0x1;
+        
     }
 
     //set syscall entry to userspace callable (dpl set to 0x3)
-    // idt[SYSCALL_VEC].reserved3 = 1;
     idt[SYSCALL_VEC].dpl = 0x3;
     idt[SYSCALL_VEC].present = 1;
 
     //populate idt with exceptions 
-    /*
-    * we need to also make the second arg
-    * to the SET_IDT_ENTRY macro the handler ptr
-    */
-    //Finish this once Sagnik is done writing enum
     SET_IDT_ENTRY(idt[0], divide_by_zero);
     SET_IDT_ENTRY(idt[1], reserved_fault);
     SET_IDT_ENTRY(idt[2], non_maskable_interrupt);
@@ -134,12 +141,12 @@ void init(){
     SET_IDT_ENTRY(idt[20], onwards_20);
 
     //populate idt with system call handlers
-    SET_IDT_ENTRY(idt[SYSCALL_VEC], syscall_handler);  //add assembly linkage later
+    SET_IDT_ENTRY(idt[SYSCALL_VEC], syscall_handler);  
     
-    //populate idt with device interrupts -- keyboard, rtc, pic
+    //populate idt with device interrupts -- keyboard, rtc
     idt[KEYB_IRQ_NO].seg_selector = KERNEL_CS;
     idt[KEYB_IRQ_NO].present = 1;
-    idt[KEYB_IRQ_NO].reserved3 = 0; //set third LSB to 1 which sets gate type to 32-bit INT gate
+    idt[KEYB_IRQ_NO].reserved3 = 0; 
     idt[KEYB_IRQ_NO].reserved4 = 0;
     idt[KEYB_IRQ_NO].reserved2 = 1;
     idt[KEYB_IRQ_NO].reserved1 = 1;
@@ -162,127 +169,219 @@ void init(){
     SET_IDT_ENTRY(idt[RTC_IRQ_NO], rtc_handler);
     SET_IDT_ENTRY(idt[KEYB_IRQ_NO], keyb_main);
 
-    //Do we register the PIC with the idt and port-address each device or connect each device?
     lidt(idt_desc_ptr);
 }
 
-
-///create the appropriate funcs here for each exception
+/* void divide_by_zero();
+ * Inputs: 
+ * Return Value: void
+ *  Function: Divide by zero exception */
 void divide_by_zero(){
     printf("Divide by Zero");
     while(1);
 }
 
+/* void reserved_fault();
+ * Inputs: N/A
+ * Return Value: void
+ *  Function: Debug error*/
 void reserved_fault(){
     printf("Debug Error");
     while(1);
 }
 
+/* void non_maskable_interrupt();
+ * Inputs: N/A
+ * Return Value: void
+ *  Function: Non-maskable-interrupt */
 void non_maskable_interrupt(){
     printf("Non-Maskable Interrupt");
     while(1);
 }
 
+/* void breakpoint();
+ * Inputs: N/A
+ * Return Value: void
+ *  Function: Breakpoint */
 void breakpoint(){
     printf("Breakpoint");
     // while(1);
 }
 
+/* void overflow();
+ * Inputs: N/A
+ * Return Value: void
+ *  Function: Overflow Trap */
 void overflow(){
     printf("Overflow Trap");
     while(1);
 }
 
+/* void bounds_range();
+ * Inputs: N/A
+ * Return Value: void
+ *  Function: Bound Range Exceeded */
 void bounds_range(){
     printf("Bound Range Exceeded");
     while(1);
 }
 
+/* void undefined_opcode();
+ * Inputs: N/A
+ * Return Value: void
+ *  Function: Undefined opcode */
 void undefined_opcode(){
     printf("Undefined opcode encountered");
     while(1);
 }
 
+/* void device_unavailable();
+ * Inputs: N/A
+ * Return Value: void
+ *  Function: Device is not available */
 void device_unavailable(){
     printf("Device is not available");
     while(1);
 }
 
+/* void double_fault();
+ * Inputs: N/A
+ * Return Value: void
+ *  Function: double fault encountered */
 void double_fault(){
     printf("double fault encountered");
     while(1);
 }
 
+/* void segment_overrun();
+ * Inputs: N/A
+ * Return Value: void
+ *  Function: segment overrun fault */
 void segment_overrun(){
     printf("segment overrun fault");
     while(1);
 }
 
+/* void invalid_tss();
+ * Inputs: N/A
+ * Return Value: void
+ *  Function: Invalid TSS Fault */
 void invalid_tss(){
     printf("Invalid TSS Fault");
     while(1);
 }
 
+/* void segment_not_present();
+ * Inputs: N/A
+ * Return Value: void
+ *  Function: segment not present */
 void segment_not_present(){
     printf("Segment not present");
     while(1);
 }
 
+/* void stack_segfault();
+ * Inputs: N/A
+ * Return Value: void
+ *  Function: segmentation fault */
 void stack_segfault(){
     printf("segmentation fault");
     while(1);
 }
 
+/* void gen_protection();
+ * Inputs: N/A
+ * Return Value: void
+ *  Function: general protection compromised */
 void gen_protection(){
     printf("general protection compromised");
     while(1);
 }
 
+/* void page_fault();
+ * Inputs: N/A
+ * Return Value: void
+ *  Function: page_fault(); */
 void page_fault(){
     printf("page fault");
     while(1);
 }
 
+/* void intel_reserved();
+ * Inputs: N/A
+ * Return Value: void
+ *  Function: reserved by intel */
 void intel_reserved(){
     printf("reserved by intel");
     while(1);
 }
 
+/* void floating_point_x87
+ * Inputs: N/A
+ * Return Value: void
+ *  Function: x87 floating point exception */
 void floating_point_x87(){
     printf("x87 floating point exception");
     while(1);
 }
 
+/* void alignment_check();
+ * Inputs: N/A
+ * Return Value: void
+ *  Function: Alignment Check encountered */
 void alignment_check(){
     printf("Alignment Check encountered");
     while(1);
 }
 
+/* void machine_check();
+ * Inputs: N/A
+ * Return Value: void
+ *  Function: Machine check encountered */
 void machine_check(){
     printf("Machine check encountered");
     while(1);
 }
 
+/* void floating_point_SIMD();
+ * Inputs: N/A
+ * Return Value: void
+ *  Function: SIMD floating point exception */
 void floating_point_SIMD(){
     printf("SIMD floating point exception");
     while(1);
 }
 
+/* void onwards_20();
+ * Inputs: N/A
+ * Return Value: void
+ *  Function: reserved by intel */
 void onwards_20(){
     printf("reserved by intel");
     while(1);
 }
 
+/* void syscall_handler();
+ * Inputs: N/A
+ * Return Value: void
+ *  Function: Syscall detected */
 void syscall_handler(){
     printf("Syscall detected");
     while(1);
 }
 
+/* void rtc_handler();
+ * Inputs: N/A
+ * Return Value: void
+ *  Function: Delegates control to rtc interrupt handler*/
 void rtc_handler(){
     rtc_handle();
-    // while(1);
 }
 
+/* void keyb_handler();
+ * Inputs: N/A
+ * Return Value: void
+ *  Function: Delegated control to keyboard handler */
 void keyb_handler(){
     keyb_main();
 }

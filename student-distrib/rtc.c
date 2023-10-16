@@ -11,13 +11,17 @@
 #define SET_BIT_6 0x40
 #define RTC_IRQ 8
 
+/* void rtc_init();
+ * Inputs: N/A
+ * Return Value: uint32_t
+ *  Function: Disables NMI & reads in the state of RegB (see osDev) to enable RTC-backed interrupts/syscalls */
 uint32_t rtc_init(void) {
   // taken from osdev: https://wiki.osdev.org/RTC
   outb(REG_B, RTC_PORT_ADDR); //disable NMI and select regB
   // read the current value of regB
-  unsigned char prev = inb(RTC_PORT_DATA);
+  unsigned char old = inb(RTC_PORT_DATA);
   outb(REG_B, RTC_PORT_ADDR); //set the index again
-  outb(prev | SET_BIT_6, RTC_PORT_DATA); //enable RTC ints
+  outb(old | SET_BIT_6, RTC_PORT_DATA); //enable RTC ints
 
   //reenable IRQ
   enable_irq(RTC_IRQ);
@@ -25,11 +29,15 @@ uint32_t rtc_init(void) {
   return 0; //SUCCESS
 }
 
+/* void rtc_handle();
+ * Inputs: N/A
+ * Return Value: void
+ *  Function: Discards old RTC value and sends EOI */
 void rtc_handle(void){
     outb(0x0C, RTC_PORT_ADDR);
     inb(RTC_PORT_DATA);
 
-    ///
+    /// vv triggers whenever RTC sends interrupt
     //printf("ADFASGJAJSAJGJ\n");
     /// call test_interrupts for handling
     send_eoi(RTC_IRQ);

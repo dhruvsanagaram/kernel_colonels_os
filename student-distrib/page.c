@@ -1,5 +1,6 @@
 #include "page.h"
 
+/* this changes the CPU registers to enable paging */
 extern void enable(int directory);
 
 // void init_dir_entry(page_dir_entry_t *entry, uint32_t user, uint32_t present, uint32_t offset) {
@@ -14,34 +15,35 @@ extern void enable(int directory);
     // page_direcctory[i].reserved = 0;
 // }
 
-
-
-
+/* void page_init();
+ * Inputs: N/A
+ * Return Value: void
+ *  Function: Sets up the page directory and page tables with empty pages */
 void page_init() {
     int i; //index
     //init first 4MB of the dir with 4kb pages
-    page_directory[0].user = 0;
+    page_directory[0].user = 0;  //set this page to supervisor mode
     page_directory[0].present = 1;
-    page_directory[0].base_addr = ((uint32_t)page_tables) / FOUR_KB;
+    page_directory[0].base_addr = ((uint32_t)page_tables) / FOUR_KB;  //read from the start of the page table, and align it in 4KB incs
     page_directory[0].rw = 1;
     page_directory[0].write_through = 0;
     page_directory[0].cache_disable = 0;
     page_directory[0].accessed = 0;
-    page_directory[0].ps_bit = 0;
+    page_directory[0].ps_bit = 0;   //This makes every page within this 4MB hold 4KB data
     page_directory[0].reserved = 0;
 
     for (i = 1; i < PAGE_SIZE; i++) {
         if(i == KERNEL_IDX){
           //set up kernel memory
           //init_dir_entry(&page_directory[i], 0, 1, ((uint32_t)KERNEL_ADDR / FOUR_KB));
-          page_directory[i].user = 0;
+          page_directory[i].user = 0;  //Kernel pages are not accessable in userspace
           page_directory[i].present = 1;
-          page_directory[i].base_addr = KERNEL_ADDR / FOUR_KB;
+          page_directory[i].base_addr = KERNEL_ADDR / FOUR_KB;  //align kernel address
           page_directory[i].rw = 1;
           page_directory[i].write_through = 0;
           page_directory[i].cache_disable = 0;
           page_directory[i].accessed = 0;
-          page_directory[i].ps_bit = 1;
+          page_directory[i].ps_bit = 1;  //each page here is 4MB
           page_directory[i].reserved = 0;
         }
         else if (i == USER_IDX) {
@@ -103,7 +105,6 @@ void page_init() {
       page_video_map[i].dirty = 0;
       page_video_map[i].reserved = 0;
       page_video_map[i].global = 0;
-      // page_video_map[i].base_addr = ((uint32_t)VIDEO_ADDR/FOUR_KB);
       page_video_map[i].base_addr = i;
     }  
     

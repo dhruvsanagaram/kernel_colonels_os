@@ -1,6 +1,7 @@
 #include "tests.h"
 #include "x86_desc.h"
 #include "lib.h"
+#include "keyboard.h"
 
 #define PASS 1
 #define FAIL 0
@@ -59,8 +60,10 @@ int idt_test(){
 
  int divide_test() {
 	TEST_HEADER;
-	int i;
-	i = 1/0;
+	int i,j,k;
+	j = 1;
+	k = 0;
+	i = j/k;
 	return FAIL;
 }
 
@@ -77,11 +80,13 @@ int idt_test(){
 
 int page_test_NULL() {
 	TEST_HEADER;
-	//char test;
-	//test = *(char*)NULL;
+	char * x;
+	char y;
+	// char test;
+	// test = *(char*)NULL;
 
-	char * x = NULL;
-	char y = *x;
+	x = NULL;
+	y = *x;
 	return FAIL;
 }
 
@@ -153,6 +158,22 @@ int page_test_vafter() {
 	return FAIL;
 }
 
+/* KEYB Test
+ * 
+ * 
+ * Inputs: None
+ * Outputs: poll char
+ * Side Effects: None
+ * Coverage: Sends int line ffrom keyb
+ * Files: x86_desc.h/S, page.c
+ */
+void kbtest() {
+	TEST_HEADER;
+	while(1) {
+		keyb_main();
+	}
+}
+
 /* Paging Test 6
  * 
  * 
@@ -174,6 +195,17 @@ int page_test_all() {
 	return PASS;
 }
 
+/* Paging Test 7
+ * 
+ * 
+ * Inputs: None
+ * Outputs: PASS/FAIL
+ * Side Effects: None
+ * Coverage: Test if anything within virtual and kernel memory is accessible
+ * Files: x86_desc.h/S, page.c
+ */
+
+
 int alltest() {
 	TEST_HEADER;
 	int i;
@@ -184,6 +216,17 @@ int alltest() {
 	return PASS;
 }
 
+/* RTC Test
+ * 
+ * 
+ * Inputs: None
+ * Outputs: PASS/FAIL
+ * Side Effects: None
+ * Coverage: Sends int line
+ * Files: x86_desc.h/S, page.c
+ */
+
+
 void rtc_test() {
 	asm volatile ("int	$0x28");
 	while(1){
@@ -191,12 +234,7 @@ void rtc_test() {
 	}
 }
 
-void kbtest() {
-	TEST_HEADER;
-	while(1) {
-		keyb_main();
-	}
-}
+
 
 /* Checkpoint 2 tests */
 /* Checkpoint 3 tests */
@@ -206,13 +244,25 @@ void kbtest() {
 
 /* Test suite entry point */
 void launch_tests(){
-	//TEST_OUTPUT("idt_test", idt_test());
 	// launch your tests here
-	//TEST_OUTPUT("divide_test", divide_test());
-	//rtc_test();
-	//TEST_OUTPUT("page_test_null", page_test_NULL());
-	//kbtest();
-	TEST_OUTPUT("alltest", alltest());
-	//TEST_OUTPUT("page_test_kbefore", page_test_kbefore());
-	TEST_OUTPUT("page_test_vbefore", page_test_vbefore());
+	///////////////////// IDT TESTS /////////////////////
+	// TEST_OUTPUT("idt_test", idt_test());
+	// TEST_OUTPUT("divide_test", divide_test());
+
+	///////////////////// DEVICE TESTS /////////////////////
+	// rtc_test();
+	
+
+	///////////////////// PAGING TESTS /////////////////////
+	// TEST_OUTPUT("alltest", alltest());
+	// TEST_OUTPUT("page_test_all", page_test_all());
+	// TEST_OUTPUT("page_test_null", page_test_NULL());
+	// TEST_OUTPUT("page_test_kbefore", page_test_kbefore());
+	// TEST_OUTPUT("page_test_kafter", page_test_kafter());
+	// TEST_OUTPUT("page_test_vbefore", page_test_vbefore());
+	// TEST_OUTPUT("page_test_vafter", page_test_vafter());
+
+
+
+	kbtest();
 }

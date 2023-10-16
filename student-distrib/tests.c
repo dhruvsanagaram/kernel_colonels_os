@@ -47,6 +47,134 @@ int idt_test(){
 
 // add more tests here
 
+/* Divide Error Fault
+ * 
+ * Throws divide error fault when dividing by zero.
+ * Inputs: None
+ * Outputs: PASS/FAIL
+ * Side Effects: None
+ * Coverage: Divide 1 by 0
+ * Files: x86_desc.h/S, idt.c
+ */
+
+ int divide_test() {
+	TEST_HEADER;
+	int i;
+	i = 1/0;
+	return FAIL;
+}
+
+
+/* Paging Test 1
+ * 
+ * 
+ * Inputs: None
+ * Outputs: PASS/FAIL
+ * Side Effects: None
+ * Coverage: Test if accessing NULL throws page fault
+ * Files: x86_desc.h/S, page.c
+ */
+
+int page_test_NULL() {
+	TEST_HEADER;
+	char test;
+	test = *(char*)NULL;
+	return FAIL;
+}
+
+/* Paging Test 2
+ * 
+ * 
+ * Inputs: None
+ * Outputs: PASS/FAIL
+ * Side Effects: None
+ * Coverage: Test if accessing before start of kernel memory throws page fault
+ * Files: x86_desc.h/S, page.c
+ */
+
+int page_test_kbefore() {
+	TEST_HEADER;
+	char test;
+	test = *(char*)0x3FFFFF;
+	return FAIL;
+}
+
+/* Paging Test 3
+ * 
+ * 
+ * Inputs: None
+ * Outputs: PASS/FAIL
+ * Side Effects: None
+ * Coverage: Test if accessing after end of kernel memory throws page fault
+ * Files: x86_desc.h/S, page.c
+ */
+
+int page_test_kafter() {
+	TEST_HEADER;
+	char test;
+	test = *(char*)0x800000;
+	return FAIL;
+}
+
+/* Paging Test 4
+ * 
+ * 
+ * Inputs: None
+ * Outputs: PASS/FAIL
+ * Side Effects: None
+ * Coverage: Test if accessing before start of video memory throws page fault
+ * Files: x86_desc.h/S, page.c
+ */
+
+int page_test_vbefore() {
+	TEST_HEADER;
+	char test;
+	test = *(char*)0xB7FFF;
+	return FAIL;
+}
+
+/* Paging Test 5
+ * 
+ * 
+ * Inputs: None
+ * Outputs: PASS/FAIL
+ * Side Effects: None
+ * Coverage: Test if accessing after end of kernel memory throws page fault
+ * Files: x86_desc.h/S, page.c
+ */
+
+int page_test_vafter() {
+	TEST_HEADER;
+	char test;
+	test = *(char*)0xB9000;
+	return FAIL;
+}
+
+/* Paging Test 6
+ * 
+ * 
+ * Inputs: None
+ * Outputs: PASS/FAIL
+ * Side Effects: None
+ * Coverage: Test if anything within virtual and kernel memory is accessible
+ * Files: x86_desc.h/S, page.c
+ */
+
+int page_test_all() {
+	TEST_HEADER;
+	char test;
+	test = *(char*)0x400000;
+	test = *(char*)0x7FFFFF;
+	test = *(char*)0xB8000;
+	test = *(char*)0xB8FFF;
+
+	return PASS;
+}
+
+void rtc_test() {
+	asm volatile ("int	$0x28");
+}
+
 /* Checkpoint 2 tests */
 /* Checkpoint 3 tests */
 /* Checkpoint 4 tests */
@@ -55,6 +183,10 @@ int idt_test(){
 
 /* Test suite entry point */
 void launch_tests(){
-	TEST_OUTPUT("idt_test", idt_test());
+	//TEST_OUTPUT("idt_test", idt_test());
 	// launch your tests here
+	TEST_OUTPUT("divide_test", divide_test());
+	//rtc_test();
+	//test_interrupts();
+	//TEST_OUTPUT("page_test_kbefore", page_test_kbefore());
 }

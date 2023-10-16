@@ -22,7 +22,7 @@ void page_init() {
     //init first 4MB of the dir with 4kb pages
     page_directory[0].user = 0;
     page_directory[0].present = 1;
-    page_directory[0].base_addr = page_tables / FOUR_KB;
+    page_directory[0].base_addr = ((uint32_t)page_tables) / FOUR_KB;
     page_directory[0].rw = 1;
     page_directory[0].write_through = 0;
     page_directory[0].cache_disable = 0;
@@ -88,7 +88,6 @@ void page_init() {
       page_tables[i].cache_disable = 0; 
       page_tables[i].accessed = 0; 
       page_tables[i].dirty = 0; 
-      page_tables[i].ps_bit = 0; 
       page_tables[i].global = 0; 
       page_tables[i].avail = 0;     
     }
@@ -109,4 +108,5 @@ void page_init() {
       page_video_map[i].base_addr = i;
     }  
     
+    enable((int)page_directory);
 } 

@@ -30,6 +30,7 @@ void rtc_handle(void){
     inb(RTC_PORT_DATA);
 
     ///
+    printf("ADFASGJAJSAJGJ");
     
     send_eoi(RTC_IRQ);
 }

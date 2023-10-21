@@ -60,7 +60,8 @@ char set_2_table[] = {
     0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b', '\t',
     'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n', 0, 'a', 's',
     'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`', 0, '\\', 'z', 'x', 'c', 'v',
-    'b', 'n', 'm', ',', '.', '/', 0, 0, 0, ' '};
+    'b', 'n', 'm', ',', '.', '/', 0, 0, 0, ' '
+    };
 
 char caps_table[] = {
     0, 0, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', '\b', '\t',
@@ -75,18 +76,6 @@ char caps_table[] = {
     SHIFT, CAPS_LOCK, BACKSPACE, CTRL_L*/
 void keyb_init(void)
 {
-    idt[KEYB_IRQ_NO].seg_selector = KERNEL_CS;
-    idt[KEYB_IRQ_NO].present = 1;
-    idt[KEYB_IRQ_NO].reserved3 = 0;
-    idt[KEYB_IRQ_NO].reserved4 = 0;
-    idt[KEYB_IRQ_NO].reserved2 = 1;
-    idt[KEYB_IRQ_NO].reserved1 = 1;
-    idt[KEYB_IRQ_NO].size = 1;
-    idt[KEYB_IRQ_NO].reserved0 = 0;
-    idt[KEYB_IRQ_NO].dpl = 0;
-    idt[KEYB_IRQ_NO].present = 1;
-
-    SET_IDT_ENTRY(idt[KEYB_IRQ_NO], &keyb_main);
     enable_irq(1);
 }
 
@@ -127,6 +116,7 @@ void keyb_main(void)
         if (userin == 0x1D)
         {
             ctrl_pressed = 1; // CTRL pressed
+            send_eoi(1);
             return;
         }
         if (ctrl_pressed == 1 && userin == 0x26)
@@ -134,11 +124,13 @@ void keyb_main(void)
             // call function to clear screen and update cursor
             keyb_char_count = 0; // CTRL Pressed & L Pressed
             clear();
+            send_eoi(1);
             return;
         }
         if (userin == 0x9D)
         {
             ctrl_pressed = 0; // CTRL Released
+            send_eoi(1);
             return;
         }
 
@@ -147,11 +139,15 @@ void keyb_main(void)
         if ((userin == 0x2A || userin == 0x36))
         {                      // Left shift pressed or right shifted
             shift_pressed = 1; // make this non sticky. Find a way to make sure we know if shift released?
+            send_eoi(1);
+            restore_flags(flags);
             return;
         }
         if ((userin == LEFT_SHIFT_RELEASE || userin == RIGHT_SHIFT_RELEASE))
         {
             shift_pressed = 0;
+            send_eoi(1);
+            restore_flags(flags);
             return;
         }
 
@@ -172,6 +168,8 @@ void keyb_main(void)
                 caps_was_active = 1; // set caps to active
                                      // read from second table
             }
+            send_eoi(1);
+            restore_flags(flags);
             return;
         }
 
@@ -191,7 +189,7 @@ void keyb_main(void)
             // check if there is space to delete a character, and if not, just exit the if
             if (keyb_char_count > 0)
             {
-                key_buf[keyb_char_count - 1] = ' '; 
+                key_buf[keyb_char_count] = ' '; 
                 keyb_char_count--;
             }
         }
@@ -236,6 +234,29 @@ void keyb_main(void)
     }
 
     send_eoi(1); // send End of Interrupt on the master pic(1 corresponds to IRQ1 on master PIC)
-    sti();
+    // sti();
     restore_flags(flags); // bring back the flags
 }
+
+// void keyb_main(void){                                       //interrupt
+//     uint32_t flags;
+//     cli_and_save(flags);                                    // store the flags
+//     uint32_t userin, kb_status;
+//     kb_status = inb(KEYB_STAT);
+//     if (kb_status & 0x01) {
+//         userin = inb(KEYB_IRQ_P);
+
+//         //0x02 = 1 , 0x3A = SPC
+//         if(userin <= 0x3A && userin >= 0x02) {              // release key
+//             char ascii_cur = set_2_table[userin];           //map the current ascii symbol from the table
+//             if (ascii_cur) {
+//                 putc(ascii_cur);                            //Print the character from stdin onto the screen
+//             }
+//         }
+//     }
+    
+//     // data,port
+//     send_eoi(0x01);                                        //send End of Interrupt on the master pic(1 corresponds to IRQ1 on master PIC)
+//     sti();
+//     restore_flags(flags);                                  // bring back the flags 
+// }

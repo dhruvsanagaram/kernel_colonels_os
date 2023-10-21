@@ -2,6 +2,7 @@
 #include "x86_desc.h"
 #include "lib.h"
 #include "keyboard.h"
+#include "filesys.h"
 
 #define PASS 1
 #define FAIL 0
@@ -167,12 +168,12 @@ int page_test_vafter() {
  * Coverage: Sends int line ffrom keyb
  * Files: x86_desc.h/S, page.c
  */
-void kbtest() {
-	TEST_HEADER;
-	while(1) {
-		keyb_main();
-	}
-}
+// void kbtest() {
+// 	TEST_HEADER;
+// 	while(1) {
+// 		keyb_main();
+// 	}
+// }
 
 /* Paging Test 6
  * 
@@ -235,12 +236,33 @@ int alltest() {
  * Coverage: Sends int line
  * Files: x86_desc.h/S, page.c
  */
- /*
-void rtc_test() {
-	int freq;
 
+void rtc_test() {
+	// int freq;
+	asm volatile ("int	$0x28");
+	while(1){
+		test_interrupts();
+	}
 }
-*/
+
+int32_t test_read_small_files() {
+    int32_t fd;
+    uint8_t buffer[MAX_FILE_SIZE];
+
+    fd = file_open((uint8_t*)"frame0.txt"); //187 bytes
+    if(fd<0){
+        puts("failed");
+        return 0;
+    }
+    int32_t bytes_read = file_read(fd, buffer, MAX_FILE_SIZE);
+    if(bytes_read<0){
+        puts("failed");
+        return 0;
+    }
+    
+    file_close(fd);
+    return bytes_read;
+}
 
 
 /* Checkpoint 3 tests */
@@ -256,7 +278,7 @@ void launch_tests(){
 	// TEST_OUTPUT("divide_test", divide_test());
 
 	///////////////////// DEVICE TESTS /////////////////////
-	// rtc_test();
+	//rtc_test();
 	
 
 	///////////////////// PAGING TESTS /////////////////////
@@ -270,5 +292,6 @@ void launch_tests(){
 
 
 
-	//kbtest(); <-- we made this properly INT driven
+	//kbtest(); //<-- we made this properly INT driven
 }
+

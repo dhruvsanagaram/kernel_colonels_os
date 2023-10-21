@@ -178,12 +178,33 @@ int32_t puts(int8_t* s) {
  * Inputs: uint_8* c = character to print
  * Return Value: void
  *  Function: Output a character to the console */
+// void putc(uint8_t c) {
+//     if (c == '\b') {
+//         *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1)) = ' ';
+//         *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1) + 1) = 0;
+//         screen_x--;
+//     }
+//     if(c == '\n' || c == '\r') {
+//         screen_y++;
+//         screen_x = 0;
+//     } else {
+//         *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1)) = c;
+//         *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1) + 1) = ATTRIB;
+//         screen_x++;
+//         screen_x %= NUM_COLS;
+//         screen_y = (screen_y + (screen_x / NUM_COLS)); //Do not go back to top (used to be mod % NUM_ROWS)
+//     }
+
+//     //If screen_y == NUM_ROWS+1 scroll  
+//     if (screen_y == NUM_ROWS + 1)
+//     {
+//         scroll_up();
+//     }
+//     //Set screen_x and screen_y to correct spot
+//     screen_y--;
+//     screen_x = 0;
+// }
 void putc(uint8_t c) {
-    if (c == '\b') {
-        *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1)) = 0;
-        *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1) + 1) = 0;
-        screen_x--;
-    }
     if(c == '\n' || c == '\r') {
         screen_y++;
         screen_x = 0;
@@ -192,35 +213,27 @@ void putc(uint8_t c) {
         *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1) + 1) = ATTRIB;
         screen_x++;
         screen_x %= NUM_COLS;
-        screen_y = (screen_y + (screen_x / NUM_COLS)); //Do not go back to top (used to be mod % NUM_ROWS)
+        screen_y = (screen_y + (screen_x / NUM_COLS)) % NUM_ROWS;
     }
-
-    //If screen_y == NUM_ROWS+1 scroll  
-    if (screen_y == NUM_ROWS + 1)
-    {
-        scroll_up();
-    }
-    //Set screen_x and screen_y to correct spot
-    screen_y--;
-    screen_x = 0;
 }
 
-void scroll_up() {
-    //Copy every line into the line above, lose the top line.
-    //Bottom line empty
-    int i,j;
-    for (i = 0; i < NUM_COLS; i++) {
-        for (j = 1; j < NUM_ROWS; j++) {
-            *(uint8_t *)(video_mem + ((NUM_COLS * (j-1) + i) << 1)) = *(uint8_t *)(video_mem + ((NUM_COLS * j + i) << 1));
-            //possible dbg needed here with printfs
-        }
-    }
-    for (i = 0; i < NUM_COLS; i++) {
-        j = NUM_ROWS;
-        *(uint8_t *)(video_mem + ((NUM_COLS * j + i) << 1)) = 0;
-    }
 
-}
+// void scroll_up() {
+//     //Copy every line into the line above, lose the top line.
+//     //Bottom line empty
+//     int i,j;
+//     for (i = 0; i < NUM_COLS; i++) {
+//         for (j = 1; j < NUM_ROWS; j++) {
+//             *(uint8_t *)(video_mem + ((NUM_COLS * (j-1) + i) << 1)) = *(uint8_t *)(video_mem + ((NUM_COLS * j + i) << 1));
+//             //possible dbg needed here with printfs
+//         }
+//     }
+//     for (i = 0; i < NUM_COLS; i++) {
+//         j = NUM_ROWS;
+//         *(uint8_t *)(video_mem + ((NUM_COLS * j + i) << 1)) = 0;
+//     }
+
+// }
 
 
 /* int8_t* itoa(uint32_t value, int8_t* buf, int32_t radix);

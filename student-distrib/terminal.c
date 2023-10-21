@@ -32,7 +32,7 @@ int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes){
     }
 
     enterKeyPressed = 0;
-    sti();
+    // sti();
     restore_flags(flags);
     return read_bytes;
 }

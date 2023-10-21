@@ -3,6 +3,7 @@
 #include "lib.h"
 #include "rtc.h"
 #include "keyboard.h"
+#include "int_handler.h"
 /*
  0 #DE Divide Error Fault No DIV and IDIV instructions.
  1 #DB RESERVED Fault/
@@ -71,7 +72,7 @@ void floating_point_SIMD();
 void onwards_20();
 void syscall_handler();
 void rtc_handler();
-void keyb_handler();
+//void keyb_handler();
 
 
 
@@ -144,16 +145,16 @@ void init(){
     SET_IDT_ENTRY(idt[SYSCALL_VEC], syscall_handler);  
     
     //populate idt with device interrupts -- keyboard, rtc
-    // idt[KEYB_IRQ_NO].seg_selector = KERNEL_CS;
-    // idt[KEYB_IRQ_NO].present = 1;
-    // idt[KEYB_IRQ_NO].reserved3 = 0; 
-    // idt[KEYB_IRQ_NO].reserved4 = 0;
-    // idt[KEYB_IRQ_NO].reserved2 = 1;
-    // idt[KEYB_IRQ_NO].reserved1 = 1;
-    // idt[KEYB_IRQ_NO].size = 1;
-    // idt[KEYB_IRQ_NO].reserved0 = 0;
-    // idt[KEYB_IRQ_NO].dpl = 0;
-    // idt[KEYB_IRQ_NO].present = 1;
+    idt[KEYB_IRQ_NO].seg_selector = KERNEL_CS;
+    idt[KEYB_IRQ_NO].present = 1;
+    idt[KEYB_IRQ_NO].reserved3 = 0; 
+    idt[KEYB_IRQ_NO].reserved4 = 0;
+    idt[KEYB_IRQ_NO].reserved2 = 1;
+    idt[KEYB_IRQ_NO].reserved1 = 1;
+    idt[KEYB_IRQ_NO].size = 1;
+    idt[KEYB_IRQ_NO].reserved0 = 0;
+    idt[KEYB_IRQ_NO].dpl = 0;
+    idt[KEYB_IRQ_NO].present = 1;
     /////// EDIT ( 10 /20 /23): ADDED IDT LOGIC SET IN KEYB.C ////////
     idt[RTC_IRQ_NO].seg_selector = KERNEL_CS;
     idt[RTC_IRQ_NO].present = 1;
@@ -165,8 +166,11 @@ void init(){
     idt[RTC_IRQ_NO].reserved0 = 0;
     idt[RTC_IRQ_NO].dpl = 0;
     idt[RTC_IRQ_NO].present = 1;
-    SET_IDT_ENTRY(idt[RTC_IRQ_NO], rtc_handler); 
-    
+
+    //SET_IDT_ENTRY(idt[RTC_IRQ_NO], rtc_handler); 
+    SET_IDT_ENTRY(idt[RTC_IRQ_NO], rtc_handler_wrapper);
+    //SET_IDT_ENTRY(idt[KEYB_IRQ_NO], keyb_handler);
+    SET_IDT_ENTRY(idt[KEYB_IRQ_NO], keyboard_handler_wrapper);
 
     lidt(idt_desc_ptr);
 }
@@ -375,13 +379,25 @@ void syscall_handler(){
  *  Function: Delegates control to rtc interrupt handler*/
 void rtc_handler(){
     rtc_handle();
+    // asm volatile(
+    //     "pushal\n\t"
+    //     "call rtc_handle\n\t"
+    //     "popal\n\t"
+    //     "iret\n\t"
+    // );
 }
 
 /* void keyb_handler();
  * Inputs: N/A
  * Return Value: void
  *  Function: Delegated control to keyboard handler */
-void keyb_handler(){
-    keyb_main();
-}
+// void keyb_handler(){
+//     keyb_main();
+//     // asm volatile(
+//     //     "pushal\n\t"
+//     //     "call keyb_main\n\t"
+//     //     "popal\n\t"
+//     //     "iret\n\t"
+//     // );
+// }
 

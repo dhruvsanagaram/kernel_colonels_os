@@ -46,19 +46,19 @@ void page_init() {
           page_directory[i].ps_bit = 1;  //each page here is 4MB
           page_directory[i].reserved = 0;
         }
-        else if (i == USER_IDX) {
-          //set up user virtual memory
-          // init_dir_entry(&page_directory[i], 1, 1, ((uint32_t)USER_ADDR / FOUR_KB));
-          page_directory[i].user = 1;
-          page_directory[i].present = 1;
-          page_directory[i].base_addr = USER_ADDR / FOUR_KB;
-          page_directory[i].rw = 1;
-          page_directory[i].write_through = 0;
-          page_directory[i].cache_disable = 0;
-          page_directory[i].accessed = 0;
-          page_directory[i].ps_bit = 1;
-          page_directory[i].reserved = 0;       
-        } 
+        // else if (i == USER_IDX) {
+        //   //set up user virtual memory
+        //   // init_dir_entry(&page_directory[i], 1, 1, ((uint32_t)USER_ADDR / FOUR_KB));
+        //   page_directory[i].user = 1;
+        //   page_directory[i].present = 1;
+        //   page_directory[i].base_addr = USER_ADDR / FOUR_KB;
+        //   page_directory[i].rw = 1;
+        //   page_directory[i].write_through = 0;
+        //   page_directory[i].cache_disable = 0;
+        //   page_directory[i].accessed = 0;
+        //   page_directory[i].ps_bit = 1;
+        //   page_directory[i].reserved = 0;       
+        // } 
         else {
           //set up remaining memory
           page_directory[i].user = 0;
@@ -70,6 +70,7 @@ void page_init() {
           page_directory[i].ps_bit = 1;
           page_directory[i].reserved = 0;
         }
+        
     }
     
     //iterate through all pages

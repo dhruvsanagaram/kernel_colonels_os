@@ -3,10 +3,11 @@
 
 #define MAX_BUF_SIZE 128
 
+#include "types.h"
 
 extern char key_buf[MAX_BUF_SIZE];
-int numChars = 0;
-int enterKeyPressed = 0;
+extern int numChars;
+extern int enterKeyPressed;
 
 
 //term driver syscalls

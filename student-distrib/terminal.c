@@ -3,6 +3,10 @@
 #include "lib.h"
 #include "i8259.h"
 
+
+int numChars = 0;
+int enterKeyPressed = 0;
+
 int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes){
     char* read;
     int32_t read_bytes;
@@ -22,10 +26,10 @@ int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes){
         ((char)buf)[i] = key_buf[i];            //copy keyboard buffer to terminal buffer
         read_bytes++;
     }
-    term_buf[i] = '\n';                              //Add newline to the end of the buffer 
+    buf[i] = '\n';                              //Add newline to the end of the buffer 
     i++;
     for (;i < nBytes;i++) {
-        term_buf[i] = 0;                             //fill rest of term buffer with 0s - for when user gives nbytes < BUFF_SIZE
+        buf[i] = 0;                             //fill rest of term buffer with 0s - for when user gives nbytes < BUFF_SIZE
     }
 
     enterKeyPressed = 0;
@@ -43,6 +47,7 @@ int32_t terminal_write(int32_t fd, const void* buf, int32_t nbytes){
         if(*ptr != '\0'){
             putc(*ptr);
         }
+        ptr++;
     }
     return nbytes;
 }

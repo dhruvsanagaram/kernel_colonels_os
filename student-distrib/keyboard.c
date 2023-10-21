@@ -4,6 +4,7 @@
 #include "types.h" // reading the values
 #include "i8259.h"
 #include "idt.h"
+#include "x86_desc.h"
 
 #define KEYB_IRQ_P 0x60
 #define KEYB_STAT 0x64

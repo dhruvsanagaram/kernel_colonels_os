@@ -150,7 +150,7 @@ void freq_change(uint32_t valHz) {
     outb(REG_A, RTC_PORT_ADDR); //register A, disnable NMI
     char pri = inb(RTC_PORT_DATA);	// 0x71
     outb(REG_A, RTC_PORT_ADDR); //reset
-    outb((pri & 0xF0) | rate , RTC_PORT_DATA) //keeps top 4 bits of prev, next 4 are new rate
+    outb((pri & 0xF0) | rate , RTC_PORT_DATA); //keeps top 4 bits of prev, next 4 are new rate
     restore_flags(flags);// enable interrupts
     sti();
 }

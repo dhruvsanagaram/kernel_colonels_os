@@ -211,7 +211,7 @@ void scroll_up() {
     int i,j;
     for (i = 0; i < NUM_COLS; i++) {
         for (j = 1; j < NUM_ROWS; j++) {
-            *(uint8_t *)(video_mem + ((NUM_COLS * (j-1) + i) << 1)) = *(uint8_t *)(video_mem + ((NUM_COLS * j + i) << 1)) = c;
+            *(uint8_t *)(video_mem + ((NUM_COLS * (j-1) + i) << 1)) = *(uint8_t *)(video_mem + ((NUM_COLS * j + i) << 1));
             //possible dbg needed here with printfs
         }
     }

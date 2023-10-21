@@ -216,6 +216,16 @@ int alltest() {
 	return PASS;
 }
 
+
+
+
+
+
+
+
+/* Checkpoint 2 tests */
+
+
 /* RTC Test
  * 
  * 
@@ -225,18 +235,13 @@ int alltest() {
  * Coverage: Sends int line
  * Files: x86_desc.h/S, page.c
  */
-
-
 void rtc_test() {
-	asm volatile ("int	$0x28");
-	while(1){
-		test_interrupts();
-	}
+	int freq;
+	
 }
 
 
 
-/* Checkpoint 2 tests */
 /* Checkpoint 3 tests */
 /* Checkpoint 4 tests */
 /* Checkpoint 5 tests */

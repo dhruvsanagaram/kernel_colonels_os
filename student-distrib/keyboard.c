@@ -1,4 +1,5 @@
 #include "keyboard.h"
+#include "terminal.h"
 #include "lib.h"   // has some input output stuff
 #include "types.h" // reading the values
 #include "i8259.h"
@@ -38,8 +39,8 @@
 
 // global counter for number of characters
 uint32_t keyb_char_count = 0;
-bool bufLimit = false;
-bool tabLimit = false;
+uint32_t bufLimit = 0;
+uint32_t tabLimit = 0;
 
 // bool flags to check which important keys are pressed
 // unsigned int caps_pressed;
@@ -99,19 +100,19 @@ void keyb_main(void)
     //Reached character limit in keyboard buffer
     if (keyb_char_count == 127)
     {
-        bufLimit = true;
+        bufLimit = 1;
     }
     else
     {
-        bufLimit = false;
+        bufLimit = 0;
     }
 
     //Reached tab limit in keyboard buffer
     if (keyb_char_count >= 124) {
-        tabLimit = true;
+        tabLimit = 1;
     }
     else {
-        tabLimit = false;
+        tabLimit = 0;
     }
 
     kb_status = inb(KEYB_STAT);
@@ -140,7 +141,7 @@ void keyb_main(void)
 
         // SHIFT
         // Enable shift capability
-        if ((userin == 0x2A || userin = 0x36))
+        if ((userin == 0x2A || userin == 0x36))
         {                      // Left shift pressed or right shifted
             shift_pressed = 1; // make this non sticky. Find a way to make sure we know if shift released?
             return;
@@ -187,7 +188,7 @@ void keyb_main(void)
             // check if there is space to delete a character, and if not, just exit the if
             if (keyb_char_count > 0)
             {
-                keyb_char_count[keyb_char_count - 1] = ' '; 
+                key_buf[keyb_char_count - 1] = ' '; 
                 keyb_char_count--;
             }
         }
@@ -211,18 +212,18 @@ void keyb_main(void)
 
                 //perhaps we should dbg the val of keyb_char_count + 1
                 //to verify if we need this if
-                if (keyb_char_count + 1 < BUFF_SIZE)
-                {
-                    key_buf[keyb_char_count] = ascii_cur;
-                    keyb_char_count++;
-                }
+                //if (keyb_char_count + 1 < BUFF_SIZE)
+               // {
+                key_buf[keyb_char_count] = ascii_cur;
+                keyb_char_count++;
+              //  }
                 // else
                 // {
                 //     keyb_char_count++;
                 // }
             }
         }
-        if (userin = 0x8F && !tabLimit) {
+        if ((userin = 0x8F) && !tabLimit) {
             int iter;
             for (iter = keyb_char_count; iter < keyb_char_count + 4; iter++) {
                 key_buf[iter] = ' ';

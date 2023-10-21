@@ -1,4 +1,4 @@
-#include "fsdriver.h"
+#include "filesys.h"
 
 #define SUCCESS 0
 #define FAILURE 1
@@ -23,14 +23,14 @@ int32_t init_fs(unsigned int filesys_addr){
   int i;
   boot_base_addr = (superblock_t*)filesys_addr;
   uint32_t num_inodes = boot_base_addr->inode_ct;
-  dentry_start_ptr = boot_base_addr->dentry;
+  dentry_start_ptr = boot_base_addr->dentries;
   inode_start_ptr = (inode_t*)(boot_base_addr + 1);
   data_block_ptr = (uint8_t*)(inode_start_ptr + num_inodes);
 
   //initialize file descriptor table for bookkeeping
   for(i=0; i < MAX_NUM_FILES; ++i){
     fd_arr[i].inode_num = -1; //fdarr not in use yet
-    fd_arr[i].file_pos = 0; //initial position
+    fd_arr[i].position = 0; //initial position
   }
   return SUCCESS; 
 }
@@ -57,7 +57,7 @@ int32_t dir_open(const uint8_t *filename){
   //at this point, we have an empty slot in the file descriptor table to use
   //so we populate the file descriptor table entry with the inode number of the directory
   fd_arr[fd].inode_num = the_dentry.inode_num;
-  fd_arr[fd].file_pos = 0;
+  fd_arr[fd].position = 0;
   return fd; //return the file_descriptor index
 }
 
@@ -128,7 +128,7 @@ int32_t file_open(const uint8_t *filename){
 
   //at this point, we have an empty slot in the file descriptor table to use
   fd_arr[fd].inode_num = the_dentry.inode_num;
-  fd_arr[fd].file_pos = 0;
+  fd_arr[fd].position = 0;
   return fd; //return the file_descriptor index
 }
 
@@ -139,7 +139,7 @@ int32_t file_close(int32_t fd){
 int32_t file_read(int32_t fd, void *buf, int32_t nbytes){
   //do something with read_data for file
   if (fd < 0 || fd >= MAX_NUM_FILES || nbytes < 0 || fd_arr[fd].inode_num == -1){
-      return -FAILURE //Invalid 
+      return -FAILURE; //Invalid 
   }
   file_d_t *file_d = &fd_arr[fd];
   int32_t byte_r = read_data(file_d->inode_num, file_d->position, buf, nbytes);
@@ -245,7 +245,7 @@ int32_t read_data (uint32_t inode, uint32_t offset, uint8_t* buf, uint32_t lengt
     // int i;
     for(i=0; i < length; ++i){
       
-      if(i + offest >= curr_inode->len){
+      if(i + offset >= curr_inode->len){
         return num_bytes_read; //reached EOF
       }
       if(byte_curr >= EXT2_DATA_BLOCK_SIZE){

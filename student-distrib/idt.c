@@ -144,17 +144,17 @@ void init(){
     SET_IDT_ENTRY(idt[SYSCALL_VEC], syscall_handler);  
     
     //populate idt with device interrupts -- keyboard, rtc
-    idt[KEYB_IRQ_NO].seg_selector = KERNEL_CS;
-    idt[KEYB_IRQ_NO].present = 1;
-    idt[KEYB_IRQ_NO].reserved3 = 0; 
-    idt[KEYB_IRQ_NO].reserved4 = 0;
-    idt[KEYB_IRQ_NO].reserved2 = 1;
-    idt[KEYB_IRQ_NO].reserved1 = 1;
-    idt[KEYB_IRQ_NO].size = 1;
-    idt[KEYB_IRQ_NO].reserved0 = 0;
-    idt[KEYB_IRQ_NO].dpl = 0;
-    idt[KEYB_IRQ_NO].present = 1;
-
+    // idt[KEYB_IRQ_NO].seg_selector = KERNEL_CS;
+    // idt[KEYB_IRQ_NO].present = 1;
+    // idt[KEYB_IRQ_NO].reserved3 = 0; 
+    // idt[KEYB_IRQ_NO].reserved4 = 0;
+    // idt[KEYB_IRQ_NO].reserved2 = 1;
+    // idt[KEYB_IRQ_NO].reserved1 = 1;
+    // idt[KEYB_IRQ_NO].size = 1;
+    // idt[KEYB_IRQ_NO].reserved0 = 0;
+    // idt[KEYB_IRQ_NO].dpl = 0;
+    // idt[KEYB_IRQ_NO].present = 1;
+    /////// EDIT ( 10 /20 /23): ADDED IDT LOGIC SET IN KEYB.C ////////
     idt[RTC_IRQ_NO].seg_selector = KERNEL_CS;
     idt[RTC_IRQ_NO].present = 1;
     idt[RTC_IRQ_NO].reserved3 = 0;
@@ -165,9 +165,8 @@ void init(){
     idt[RTC_IRQ_NO].reserved0 = 0;
     idt[RTC_IRQ_NO].dpl = 0;
     idt[RTC_IRQ_NO].present = 1;
-
-    SET_IDT_ENTRY(idt[RTC_IRQ_NO], rtc_handler);
-    SET_IDT_ENTRY(idt[KEYB_IRQ_NO], keyb_main);
+    SET_IDT_ENTRY(idt[RTC_IRQ_NO], rtc_handler); 
+    
 
     lidt(idt_desc_ptr);
 }

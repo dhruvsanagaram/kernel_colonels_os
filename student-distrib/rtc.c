@@ -17,8 +17,12 @@
 
 #define MAX_FQ 1024
 #define MIN_FQ 2
+#define AVG_FRQ MAX_FQ / MIN_FQ
 
 volatile uint32_t rtcInterrupt = 0;
+
+void freq_change(uint32_t valHz);
+int32_t log2(uint32_t val);
 
 /* void rtc_init();
  * Inputs: N/A
@@ -33,14 +37,11 @@ int32_t rtc_init(void) {
   outb(old | SET_BIT_6, RTC_PORT_DATA); //enable RTC ints
 
   //set the frequency to 2Hz
-
-  
+  //possible DBG line
+  freq_change(2);
 
   //reenable IRQ
   enable_irq(RTC_IRQ);
-
-  
-  
   return SUCCESS; //SUCCESS
 }
 
@@ -63,7 +64,11 @@ void rtc_handle(void){
  *  Function: Open RTC */
 
  int32_t rtc_open(const uint8_t *filename) {
-  
+   uint32_t flags;
+   cli_and_save(flags);
+   freq_change(2);
+   restore_flags(flags);
+   sti();
    return SUCCESS;
  }
 
@@ -73,15 +78,16 @@ void rtc_handle(void){
  * Return Value: void
  *  Function: Close RTC */
 
- int32_t rtc_close(int32_t fd) {
-
+ int32_t rtc_close(int32_t fd){
    return SUCCESS;
  }
 
  /* void rtc_read();
  * Inputs: N/A
  * Return Value: void
- *  Function: Read RTC */
+ *  Function: Read RTC on interrupt*/
+
+/*rtc_read must return only after an RTC interrupt has occured. You may want to use a flag here (no spinlocks)*/
 
 int32_t rtc_read(int32_t fd, void* buf, uint32_t nbytes){
   rtcInterrupt = 0;
@@ -90,7 +96,9 @@ int32_t rtc_read(int32_t fd, void* buf, uint32_t nbytes){
 }
 
  /* void rtc_write();
- * Inputs: N/A
+ * Inputs: fd -- the file descriptor 
+          *buf -- generic ptr to frequency (const void)
+          *nbytes -- the number of bytes to write
  * Return Value: void
  *  Function: Write RTC */
 
@@ -102,9 +110,12 @@ written, or -1 on failure.
 */
 
 int32_t rtc_write(int32_t fd, const void* buf, uint32_t nbytes){
+  if(nbytes != 4){
+    return -FAILURE;
+  }
   uint32_t fq;
   int PowerOfTwo;
-  fq = (int) *buf; //SOMEONE FIX THIS PLZ
+  fq = *(int32_t*)buf; //cast to integer ptr type (from generic) and then deref
 
   //Checks:
   //Frequency OOB - fail
@@ -120,7 +131,36 @@ int32_t rtc_write(int32_t fd, const void* buf, uint32_t nbytes){
     return -FAILURE;
   }
   
-  
-  
+  //We need to set frequency here
+  freq_change(fq);  
   return SUCCESS;
 }
+
+/* void freq_change(uint32_t valHz);
+ * Inputs: valHz -- the new frequency in Hz
+ * Return Value: void
+ *  Function: RTC clock frequency changed */
+void freq_change(uint32_t valHz) {
+    uint32_t flags;
+    int32_t rate = log2(32768.0 / valHz) + 1; // frequency =  32768 >> (rate-1);
+    if(rate <= 2 || rate > 15){ // you want [3,15] inclusive
+      return;
+    } 
+    cli_and_save(flags);// disable interrupts
+    outb(REG_A, RTC_PORT_ADDR); //register A, disnable NMI
+    char pri = inb(RTC_PORT_DATA);	// 0x71
+    outb(REG_A, RTC_PORT_ADDR); //reset
+    outb((pri & 0xF0) | rate , RTC_PORT_DATA) //keeps top 4 bits of prev, next 4 are new rate
+    restore_flags(flags);// enable interrupts
+    sti();
+}
+
+//// helper for finding the log2 of a number
+int32_t log2(uint32_t val) {
+  int32_t i = 0;
+  while (val >>= 1) {
+    i++;
+  }
+  return i;
+}
+

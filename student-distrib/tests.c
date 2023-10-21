@@ -235,11 +235,12 @@ int alltest() {
  * Coverage: Sends int line
  * Files: x86_desc.h/S, page.c
  */
+ /*
 void rtc_test() {
 	int freq;
-	
-}
 
+}
+*/
 
 
 /* Checkpoint 3 tests */

@@ -43,6 +43,8 @@ uint32_t keyb_char_count = 0;
 uint32_t bufLimit = 0;
 uint32_t tabLimit = 0;
 
+char key_buf[MAX_BUF_SIZE];
+
 // bool flags to check which important keys are pressed
 // unsigned int caps_pressed;
 unsigned int caps_was_active = 0;

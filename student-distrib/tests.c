@@ -270,7 +270,7 @@ int terminalTest(){
 	int numBytes;
 	char buffer[1024];
 	while(1){
-		terminal_write(0, "BUFFER Limit Test!\n", 19);
+		//terminal_write(0, "\nBUFFER Limit Test!\n", 19);
 		numBytes = terminal_read(0, buffer, 128);
 		terminal_write(0, buffer, numBytes);
 

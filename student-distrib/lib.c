@@ -3,6 +3,8 @@
 
 #include "lib.h"
 
+#define ASM
+
 #define VIDEO       0xB8000
 #define NUM_COLS    80
 #define NUM_ROWS    25
@@ -28,11 +30,27 @@ void clear(void) {
     //Update cursor position to top-left
     screen_x = 0;
     screen_y = 0;
-    uint16_t cursorPos = screen_x + screen_y * NUM_COLS;
-    outb(0x0F, 0x3D4);
-    outb((uint8_t)(cursorPos && 0xFF), 0x3D5);
-    outb(0x0E, 0x3D4);
-    outb((uint8_t)((cursorPos >> 8) && 0xFF), 0x3D5);
+}
+
+
+void enable_cursor(uint8_t cursor_start, uint8_t cursor_end)
+{
+	outb( 0x0A, 0x3D4);
+	outb((inb(0x3D5) & 0xC0) | cursor_start, 0x3D5);
+ 
+	outb(0x3D4, 0x0B);
+	outb((inb(0x3D5) & 0xE0) | cursor_end, 0x3D5);
+}
+
+
+void update_cursor(int x, int y)
+{
+	uint16_t pos = y * NUM_COLS + x;
+ 
+	outb(0x0F, 0x3D4);
+	outb((uint8_t) (pos & 0xFF), 0x3D5);
+	outb(0x3D4, 0x0E);
+	outb((uint8_t) ((pos >> 8) & 0xFF), 0x3D5);
 }
 
 /* Standard printf().
@@ -244,6 +262,7 @@ void putc(uint8_t c) {
         //Set screen_x and screen_y to correct spot
         
     }
+    update_cursor(screen_x, screen_y);
 }
 
 

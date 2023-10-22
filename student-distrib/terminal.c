@@ -9,26 +9,46 @@ int enterKeyPressed = 0;
 
 int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes){
     int32_t read_bytes;
+    int32_t read_lim;
     uint32_t flags;
     int i;
     while(!enterKeyPressed);
     cli_and_save(flags);
 
     read_bytes = 0;
-    for (i = 0; i < nbytes; i++) {
+    // if(nbytes >= 128){
+    //     read_lim = 127; //clip the chars to read up to 127 so that the 128th index is automatically \n
+    // }
+    // else {
+    //     read_lim = nbytes;
+    // }
+
+    //loop until either n bytes reached or command flow
+
+    //read_lim - 1
+    for (i = 0; i < nbytes - 1; i++) {
 
         //if nbytes > terminal buf size, this causes loop to break
-        if (((char*)key_buf)[i] == '\n') { 
+        if (key_buf[i] == '\n') { 
+            key_buf[i] = ' ';
+            //i--;
             break;   
         }
         ((char*)buf)[i] = key_buf[i];            //copy keyboard buffer to terminal buffer
+        key_buf[i] = '\0';
         read_bytes++;
+
     }
-    ((char*)buf)[i] = '\n';                              //Add newline to the end of the buffer 
+    //i++;
+    ((char*)buf)[i] = '\n';  
+    read_bytes++;                            //Add newline to the end of the buffer 
     i++;
     for (;i < nbytes;i++) {
-        ((char*)buf)[i] = 0;                             //fill rest of term buffer with 0s - for when user gives nbytes < BUFF_SIZE
+        ((char*)buf)[i] = '\0';                             //fill rest of term buffer with 0s - for when user gives nbytes < BUFF_SIZE
     }
+
+    keyb_char_count = 0;
+
 
     enterKeyPressed = 0;
     // sti();

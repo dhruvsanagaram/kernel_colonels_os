@@ -30,16 +30,13 @@ void clear(void) {
     //Update cursor position to top-left
     screen_x = 0;
     screen_y = 0;
+    update_cursor(0,0);
 }
 
 
-void enable_cursor(uint8_t cursor_start, uint8_t cursor_end)
+void enable_cursor()
 {
-	outb( 0x0A, 0x3D4);
-	outb((inb(0x3D5) & 0xC0) | cursor_start, 0x3D5);
- 
-	outb(0x3D4, 0x0B);
-	outb((inb(0x3D5) & 0xE0) | cursor_end, 0x3D5);
+	update_cursor(screen_x,screen_y);
 }
 
 
@@ -49,7 +46,7 @@ void update_cursor(int x, int y)
  
 	outb(0x0F, 0x3D4);
 	outb((uint8_t) (pos & 0xFF), 0x3D5);
-	outb(0x3D4, 0x0E);
+	outb(0x0E, 0x3D4);
 	outb((uint8_t) ((pos >> 8) & 0xFF), 0x3D5);
 }
 

@@ -10,7 +10,7 @@
 int32_t printf(int8_t *format, ...);
 void putc(uint8_t c);
 void scroll_up();
-void enable_cursor(uint8_t cursor_start, uint8_t cursor_end);
+void enable_cursor();
 void update_cursor(int x, int y);
 int32_t puts(int8_t *s);
 int8_t *itoa(uint32_t value, int8_t* buf, int32_t radix);

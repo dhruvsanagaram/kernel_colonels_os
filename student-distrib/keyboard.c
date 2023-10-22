@@ -101,7 +101,7 @@ char lock_table[] = {
     SHIFT, CAPS_LOCK, BACKSPACE, CTRL_L*/
 void keyb_init(void)
 {
-    enable_cursor(0,25);
+    enable_cursor();
     enable_irq(1);
 }
 

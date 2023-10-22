@@ -19,7 +19,6 @@ int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes){
 
         //if nbytes > terminal buf size, this causes loop to break
         if (((char*)key_buf)[i] == '\n') { 
-            i = i-1;    //Why?
             break;   
         }
         ((char*)buf)[i] = key_buf[i];            //copy keyboard buffer to terminal buffer

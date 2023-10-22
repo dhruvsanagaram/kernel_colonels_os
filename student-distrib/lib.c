@@ -6,7 +6,7 @@
 #define VIDEO       0xB8000
 #define NUM_COLS    80
 #define NUM_ROWS    25
-#define ATTRIB      0x7
+#define ATTRIB      11
 
 static int screen_x;
 static int screen_y;
@@ -180,9 +180,15 @@ int32_t puts(int8_t* s) {
  *  Function: Output a character to the console */
 // void putc(uint8_t c) {
 //     if (c == '\b') {
-//         *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1)) = ' ';
-//         *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1) + 1) = 0;
-//         screen_x--;
+//         *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x-1) << 1)) = ' ';
+//         *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x-1) << 1) + 1) = 0;
+//         if (screen_x == 0) {
+//             screen_x = NUM_COLS - 1;
+//             screen_y--;
+//         }
+//         else {
+//             screen_x--;
+//         }
 //     }
 //     if(c == '\n' || c == '\r') {
 //         screen_y++;
@@ -195,17 +201,29 @@ int32_t puts(int8_t* s) {
 //         screen_y = (screen_y + (screen_x / NUM_COLS)); //Do not go back to top (used to be mod % NUM_ROWS)
 //     }
 
-//     //If screen_y == NUM_ROWS+1 scroll  
+//     // If screen_y == NUM_ROWS+1 scroll  
 //     if (screen_y == NUM_ROWS + 1)
 //     {
 //         scroll_up();
+//         //Set screen_x and screen_y to correct spot
+//         screen_y--;
+//         screen_x = 0;
 //     }
-//     //Set screen_x and screen_y to correct spot
-//     screen_y--;
-//     screen_x = 0;
 // }
+
 void putc(uint8_t c) {
-    if(c == '\n' || c == '\r') {
+    if (c == '\b') {
+        *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x-1) << 1)) = ' ';
+        *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x-1) << 1) + 1) = 0;
+        if (screen_x == 0) {
+            screen_x = NUM_COLS - 1;
+            screen_y--;
+        }
+        else {
+            screen_x--;
+        }
+    }
+    else if (c == '\n' || c == '\r') {
         screen_y++;
         screen_x = 0;
     } else {
@@ -213,27 +231,44 @@ void putc(uint8_t c) {
         *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x) << 1) + 1) = ATTRIB;
         screen_x++;
         screen_x %= NUM_COLS;
-        screen_y = (screen_y + (screen_x / NUM_COLS)) % NUM_ROWS;
+        if (screen_x == 0) {
+            screen_y++;
+        }
+    }
+
+    // If screen_y == NUM_ROWS+1 scroll  
+    if (screen_y == NUM_ROWS)
+    {
+        
+        scroll_up();
+        //Set screen_x and screen_y to correct spot
+        
     }
 }
 
 
-// void scroll_up() {
-//     //Copy every line into the line above, lose the top line.
-//     //Bottom line empty
-//     int i,j;
-//     for (i = 0; i < NUM_COLS; i++) {
-//         for (j = 1; j < NUM_ROWS; j++) {
-//             *(uint8_t *)(video_mem + ((NUM_COLS * (j-1) + i) << 1)) = *(uint8_t *)(video_mem + ((NUM_COLS * j + i) << 1));
-//             //possible dbg needed here with printfs
-//         }
-//     }
-//     for (i = 0; i < NUM_COLS; i++) {
-//         j = NUM_ROWS;
-//         *(uint8_t *)(video_mem + ((NUM_COLS * j + i) << 1)) = 0;
-//     }
+void scroll_up() {
+    //Copy every line into the line above, lose the top line.
+    //Bottom line empty
+    int i,j;
+    uint8_t inter1, inter2;
+    screen_y--;
+    screen_x = 0;
+    for (i = 0; i < NUM_COLS; i++) {
+        for (j = 1; j < NUM_ROWS; j++) {
+            inter1 = *(uint8_t *)(video_mem + ((NUM_COLS * j + i) << 1));
+            inter2 = *(uint8_t *)(video_mem + ((NUM_COLS * j + i) << 1) +1);
+            *(uint8_t *)(video_mem + ((NUM_COLS * (j-1) + i) << 1)) = inter1;
+            *(uint8_t *)(video_mem + ((NUM_COLS * (j-1) + i) << 1) + 1) = inter2;
+            //possible dbg needed here with printfs
+        }
+    }
+    for (i = 0; i < NUM_COLS; i++) {
+        j = NUM_ROWS-1;
+        *(uint8_t *)(video_mem + ((NUM_COLS * j + i) << 1)) = 0;
+    }
 
-// }
+}
 
 
 /* int8_t* itoa(uint32_t value, int8_t* buf, int32_t radix);

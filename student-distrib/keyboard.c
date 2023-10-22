@@ -13,6 +13,7 @@
 
 #define LOWER_TBL 0
 #define UPPER_TBL 1
+#define LOCK_TBL 2 //capslock table
 
 #define LEFT_SHIFT 0x2A
 #define LEFT_SHIFT_RELEASE 0xAA
@@ -56,18 +57,42 @@ unsigned int table_to_read_from = 0;
 unsigned int ctrl_pressed = 0;
 
 // table comes from os dev
-char set_2_table[] = {
-    0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b', '\t',
+char lower_table[] = {
+    0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b', ' ',
     'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n', 0, 'a', 's',
     'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`', 0, '\\', 'z', 'x', 'c', 'v',
     'b', 'n', 'm', ',', '.', '/', 0, 0, 0, ' '
     };
 
+
 char caps_table[] = {
-    0, 0, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', '\b', '\t',
+    0, 0, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', '\b', ' ',
     'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', '\n', 0, 'A', 'S',
     'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '"', '~', 0, '|', 'Z', 'X', 'C', 'V',
-    'B', 'N', 'M', '<', '>', '?', 0, 0, 0, ' '};
+    'B', 'N', 'M', '<', '>', '?', 0, 0, 0, ' '
+};
+
+char lock_table[] = {
+    0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b', ' ',
+    'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '[', ']', '\n', 0, 'A', 'S',
+    'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', '\'', '`', 0, '\\', 'Z', 'X', 'C', 'V',
+    'B', 'N', 'M', ',', '.', '/', 0, 0, 0, ' '
+};
+
+    
+// char caps_table[] = {
+//     0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b', '\t',
+//     'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '[', ']', '\n', 0, 'A', 'S',
+//     'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', '\'', '`', 0, '\\', 'Z', 'X', 'C', 'V',
+//     'B', 'N', 'M', ',', '.', '/', 0, 0, 0, ' '
+// };
+
+// char Sh_table[] = {
+//     0, 0, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', '\b', '\t',
+//     'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', '\n', 0, 'A', 'S',
+//     'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '\"', '~', 0, '|', 'Z', 'X', 'C', 'V',
+//     'B', 'N', 'M', '<', '>', '?', 0, 0, 0, ' '
+//     };
 
 /* void keyb_init(void);
  * Inputs: N/A
@@ -125,6 +150,7 @@ void keyb_main(void)
             keyb_char_count = 0; // CTRL Pressed & L Pressed
             clear();
             send_eoi(1);
+            restore_flags(flags);
             return;
         }
         if (userin == 0x9D)
@@ -174,12 +200,21 @@ void keyb_main(void)
         }
 
         // Don't return since we want to process valid character with shift/caps presets
-        if ((shift_pressed == 1 || caps_was_active == 1))
-        {
-            table_to_read_from = UPPER_TBL; // set tables to read from accordingly
+        // if ((shift_pressed == 1))
+        // {
+        //     table_to_read_from = SH_TBL; // set tables to read from accordingly
+        // }
+
+        //Table read decoder
+        if(shift_pressed == 1){
+            table_to_read_from = UPPER_TBL;
         }
-        else //if (!(shift_pressed == 1 || caps_was_active == 1))
+        if(caps_was_active == 1 && shift_pressed == 0)
         {
+            table_to_read_from = LOCK_TBL;
+        }
+        if(shift_pressed == 0 && caps_was_active == 0){
+
             table_to_read_from = LOWER_TBL;
         }
 
@@ -189,8 +224,16 @@ void keyb_main(void)
             // check if there is space to delete a character, and if not, just exit the if
             if (keyb_char_count > 0)
             {
-                key_buf[keyb_char_count] = ' '; 
+                // key_buf[keyb_char_count] = ' '; 
+                if(keyb_char_count <= 128){
+                    key_buf[keyb_char_count] = ' ';
+                }
                 keyb_char_count--;
+            }
+            else {
+                send_eoi(1);
+                restore_flags(flags);
+                return;
             }
         }
 
@@ -206,7 +249,25 @@ void keyb_main(void)
         if (userin < 0x3A && userin >= 0x02 && !bufLimit && userin != 0x8F)
         {
             // map the current ascii symbol from the table
-            char ascii_cur = (!!table_to_read_from) ? caps_table[userin] : set_2_table[userin];
+            // char ascii_cur = (!!table_to_read_from) ? caps_table[userin] : set_2_table[userin];
+            char ascii_cur;
+            switch(table_to_read_from){
+                case LOWER_TBL: ascii_cur = lower_table[userin]; break;
+                case UPPER_TBL: ascii_cur = caps_table[userin]; break;
+                case LOCK_TBL: ascii_cur = lock_table[userin]; break;
+            }
+            //char ascii_cur;
+            // switch (!!table_to_read_from){
+            //     case 1:
+            //         ascii_cur = caps_table[userin];
+            //         break;
+            //     case 2:
+            //         ascii_cur = Sh_table[userin];
+            //         break;
+            //     case 0:
+            //         ascii_cur = set_2_table[userin];
+            //         break;
+            //}
             if (ascii_cur)
             {
                 putc(ascii_cur); // Print the character from stdin onto the screen
@@ -224,14 +285,9 @@ void keyb_main(void)
                 // }
             }
         }
-        if ((userin = 0x8F) && !tabLimit) {
-            int iter;
-            for (iter = keyb_char_count; iter < keyb_char_count + 4; iter++) {
-                key_buf[iter] = ' ';
-            }
-            keyb_char_count+=4;
-        }
     }
+    //Print info about the buffer
+    //printf("Keyb count:%d\n", keyb_char_count);
 
     send_eoi(1); // send End of Interrupt on the master pic(1 corresponds to IRQ1 on master PIC)
     // sti();

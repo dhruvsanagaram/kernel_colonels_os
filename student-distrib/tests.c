@@ -264,6 +264,27 @@ int32_t test_read_small_files() {
     return bytes_read;
 }
 
+int terminalTest(){
+	TEST_HEADER;
+
+	int numBytes;
+	char buffer[1024];
+	while(1){
+		terminal_write(0, "BUFFER Limit Test!\n", 19);
+		numBytes = terminal_read(0, buffer, 128);
+		terminal_write(0, buffer, numBytes);
+
+		// terminal_write(0, "BELOW BUFFER Limit Test!\n", 25);
+		// numBytes = terminal_read(0, buffer, 5);
+		// terminal_write(0, buffer, numBytes);
+
+		// terminal_write(0, "ABOVE BUFFER Limit Test!\n", 25);
+		// numBytes = terminal_read(0, buffer, 130);
+		// terminal_write(0, buffer, numBytes);
+	}
+	return PASS;
+}
+
 
 /* Checkpoint 3 tests */
 /* Checkpoint 4 tests */
@@ -289,6 +310,10 @@ void launch_tests(){
 	// TEST_OUTPUT("page_test_kafter", page_test_kafter());
 	// TEST_OUTPUT("page_test_vbefore", page_test_vbefore());
 	// TEST_OUTPUT("page_test_vafter", page_test_vafter());
+
+
+	/////////////////// TERMINAL TESTS ////////////////////
+	TEST_OUTPUT("terminalTest", terminalTest());
 
 
 

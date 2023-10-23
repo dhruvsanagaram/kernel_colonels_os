@@ -245,24 +245,34 @@ void rtc_test() {
 	}
 }
 
+
+
+
 int32_t test_read_small_files() {
+	TEST_HEADER;
     int32_t fd;
     uint8_t buffer[MAX_FILE_SIZE];
 
     fd = file_open((uint8_t*)"frame0.txt"); //187 bytes
     if(fd<0){
-        puts("failed");
-        return 0;
+        return FAIL;
     }
     int32_t bytes_read = file_read(fd, buffer, MAX_FILE_SIZE);
+	printf("bytes read: %d\n", bytes_read);
     if(bytes_read<0){
-        puts("failed");
-        return 0;
+        return FAIL;
     }
     
     file_close(fd);
-    return bytes_read;
+    return PASS;
 }
+
+//ensures that test_read_data works as intended
+// int32_t test_read_data() {
+// 	TEST_HEADER;
+// 	int32_t fd;
+// 	uint8_t buf[MAX_FILE_SIZE];
+// }
 
 int terminalTest(){
 	TEST_HEADER;
@@ -283,6 +293,11 @@ int terminalTest(){
 		// terminal_write(0, buffer, numBytes);
 	}
 	return PASS;
+}
+
+int dir_test_wrapper() {
+	TEST_HEADER;
+	return dir_test;
 }
 
 
@@ -313,9 +328,19 @@ void launch_tests(){
 
 
 	/////////////////// TERMINAL TESTS ////////////////////
-	TEST_OUTPUT("terminalTest", terminalTest());
+	//TEST_OUTPUT("terminalTest", terminalTest());
+
+	/////////////////// FILESYS TESTS /////////////////////
+
+	/********** tests for fs API funcs **********/
 
 
+
+	/********** tests for fs syscalls **********/
+	//TEST_OUTPUT("test_read_small_files", test_read_small_files());
+	// dir_test();
+	// fileRead_Test();
+	// readTextFile();
 
 	//kbtest(); //<-- we made this properly INT driven
 }

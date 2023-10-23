@@ -12,12 +12,15 @@
 #include "page.h"
 #include "rtc.h"
 #include "keyboard.h"
+#include "filesys.h"
 
 #define RUN_TESTS
 
 /* Macros. */
 /* Check if the bit BIT in FLAGS is set. */
 #define CHECK_FLAG(flags, bit)   ((flags) & (1 << (bit)))
+
+//global variable to hold the filesystem's mount address for multiboot
 
 /* Check if MAGIC is valid and print the Multiboot information structure
    pointed by ADDR. */
@@ -52,12 +55,28 @@ void entry(unsigned long magic, unsigned long addr) {
     if (CHECK_FLAG(mbi->flags, 2))
         printf("cmdline = %s\n", (char *)mbi->cmdline);
 
-    if (CHECK_FLAG(mbi->flags, 3)) {
+    /////////////////////// MOUNT FILESYS  ///////////////////////
+    /*
+    * STEPS:
+    * 1. CHECK modules in multiboot info structure
+    * 2. RETRIEVE base addr for filesys info
+    * 3. call initialization to mount the filesystem
+    * 4. Handle init outcome --> make sure that
+    *                        the filesystem is properly mounted
+    * 5. If filesys not found, throw module not found error
+    * 6. CONTINUE
+    */
+   if (CHECK_FLAG(mbi->flags, 3)) {
         int mod_count = 0;
         int i;
         module_t* mod = (module_t*)mbi->mods_addr;
+
+        //INIT FS
+        init_fs(mod->mod_start);
+
         while (mod_count < mbi->mods_count) {
             printf("Module %d loaded at address: 0x%#x\n", mod_count, (unsigned int)mod->mod_start);
+            
             printf("Module %d ends at address: 0x%#x\n", mod_count, (unsigned int)mod->mod_end);
             printf("First few bytes of module:\n");
             for (i = 0; i < 16; i++) {
@@ -68,11 +87,15 @@ void entry(unsigned long magic, unsigned long addr) {
             mod++;
         }
     }
+    /////////////////////////////////////////////////////////////
+    
     /* Bits 4 and 5 are mutually exclusive! */
     if (CHECK_FLAG(mbi->flags, 4) && CHECK_FLAG(mbi->flags, 5)) {
         printf("Both bits 4 and 5 are set.\n");
         return;
     }
+
+    
 
     /* Is the section header table of ELF valid? */
     if (CHECK_FLAG(mbi->flags, 5)) {
@@ -147,6 +170,9 @@ void entry(unsigned long magic, unsigned long addr) {
     rtc_init();
     keyb_init();
     page_init();
+
+    
+
 
 
     /* Enable interrupts */

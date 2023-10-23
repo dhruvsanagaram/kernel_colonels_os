@@ -23,7 +23,7 @@
 typedef struct {
   int8_t filename[FILENAME_LEN];
   int32_t filetype;
-  int32_t inode_num;
+  uint32_t inode_num;
   int8_t reserved[DENTRY_RESERVED]; ///24
 } dentry_t;
 
@@ -40,13 +40,14 @@ typedef struct {
   dentry_t dentries[NUM_DENTRIES_BOOT];
 } superblock_t;
 
-typedef struct {
-    int32_t inode_num; // The inode number of the file
-    int32_t position;  // The current position within the file
-} file_d_t;
+//this does not matter until scheduling
+// typedef struct {
+//     int32_t inode_num; // The inode number of the file
+//     int32_t position;  // The current position within the file
+// } file_d_t;
 
-//array of file descriptors for each file we need to read
-file_d_t fd_arr[MAX_NUM_FILES];
+// //array of file descriptors for each file we need to read
+// file_d_t fd_arr[MAX_NUM_FILES];
 
 
 /*-- MOUNT INIT FS --*/
@@ -73,5 +74,12 @@ int32_t read_dentry_by_index(uint32_t index, dentry_t *dentry);
 
 // read data from the file given inode num //
 int32_t read_data (uint32_t inode, uint32_t offset, uint8_t* buf, uint32_t length);
+
+///////// TESTS /////////
+int32_t dir_test();
+int32_t fileRead_Test();
+int32_t readTextFile();
+
+
 
 #endif /* FILESYS_H */

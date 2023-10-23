@@ -68,7 +68,7 @@ char lower_table[] = {
 char caps_table[] = {
     0, 0, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', '\b', ' ',
     'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', '\n', 0, 'A', 'S',
-    'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '"', '~', 0, '|', 'Z', 'X', 'C', 'V',
+    'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '\"', '~', 0, '|', 'Z', 'X', 'C', 'V',
     'B', 'N', 'M', '<', '>', '?', 0, 0, 0, ' '
 };
 
@@ -101,6 +101,7 @@ char lock_table[] = {
     SHIFT, CAPS_LOCK, BACKSPACE, CTRL_L*/
 void keyb_init(void)
 {
+    enable_cursor();
     enable_irq(1);
 }
 
@@ -113,6 +114,7 @@ void keyb_main(void)
     uint32_t flags;
     uint32_t userin, kb_status;
     cli_and_save(flags); // store the flags
+    
 
     //Reached character limit in keyboard buffer
     if (keyb_char_count == 127)
@@ -224,11 +226,15 @@ void keyb_main(void)
             // check if there is space to delete a character, and if not, just exit the if
             if (keyb_char_count > 0)
             {
-                // key_buf[keyb_char_count] = ' '; 
-                if(keyb_char_count <= 128){
-                    key_buf[keyb_char_count] = ' ';
-                }
+                key_buf[keyb_char_count] = ' '; 
+                // if(keyb_char_count <= 128){
+                //     key_buf[keyb_char_count] = ' ';
+                // }
                 keyb_char_count--;
+                putc('\b');
+                send_eoi(1);
+                restore_flags(flags);
+                return;
             }
             else {
                 send_eoi(1);
@@ -240,9 +246,12 @@ void keyb_main(void)
         // ENTER
         if (userin == 0x1C)
         {
-            // putc('\n');
+            putc('\n');
             enterKeyPressed = 1;
             key_buf[keyb_char_count] = '\n';
+            send_eoi(1);
+            restore_flags(flags);
+            return;
         }
 
         // 0x02 = 1 , 0x3A = SPC

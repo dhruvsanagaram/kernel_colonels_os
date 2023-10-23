@@ -3,6 +3,8 @@
 
 #include "lib.h"
 
+#define ASM
+
 #define VIDEO       0xB8000
 #define NUM_COLS    80
 #define NUM_ROWS    25
@@ -28,11 +30,24 @@ void clear(void) {
     //Update cursor position to top-left
     screen_x = 0;
     screen_y = 0;
-    uint16_t cursorPos = screen_x + screen_y * NUM_COLS;
-    outb(0x0F, 0x3D4);
-    outb((uint8_t)(cursorPos && 0xFF), 0x3D5);
-    outb(0x0E, 0x3D4);
-    outb((uint8_t)((cursorPos >> 8) && 0xFF), 0x3D5);
+    update_cursor(0,0);
+}
+
+
+void enable_cursor()
+{
+	update_cursor(screen_x,screen_y);
+}
+
+
+void update_cursor(int x, int y)
+{
+	uint16_t pos = y * NUM_COLS + x;
+ 
+	outb(0x0F, 0x3D4);
+	outb((uint8_t) (pos & 0xFF), 0x3D5);
+	outb(0x0E, 0x3D4);
+	outb((uint8_t) ((pos >> 8) & 0xFF), 0x3D5);
 }
 
 /* Standard printf().
@@ -214,7 +229,7 @@ int32_t puts(int8_t* s) {
 void putc(uint8_t c) {
     if (c == '\b') {
         *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x-1) << 1)) = ' ';
-        *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x-1) << 1) + 1) = 0;
+        *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x-1) << 1) + 1) = ATTRIB;
         if (screen_x == 0) {
             screen_x = NUM_COLS - 1;
             screen_y--;
@@ -243,7 +258,9 @@ void putc(uint8_t c) {
         scroll_up();
         //Set screen_x and screen_y to correct spot
         
+        
     }
+    update_cursor(screen_x, screen_y);
 }
 
 

@@ -52,6 +52,7 @@ int32_t rtc_init(void) {
 void rtc_handle(void){
     outb(0x0C, RTC_PORT_ADDR);
     inb(RTC_PORT_DATA);
+    rtcInterrupt = 1;
     /// vv triggers whenever RTC sends interrupt
     //printf("ADFASGJAJSAJGJ\n");
     /// call test_interrupts for handling

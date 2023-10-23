@@ -238,11 +238,57 @@ int alltest() {
  */
 
 void rtc_test() {
-	// int freq;
-	asm volatile ("int	$0x28");
-	while(1){
-		test_interrupts();
+	int i;
+	clear();
+	rtc_open();
+	for (i = 0; i < 16; i++){
+		rtc_read(0,0,0);
+		printf("%d",1);
 	}
+	clear();
+	freq_change(4);
+	for (i = 0; i < 16; i++){
+		rtc_read(0,0,0);
+		printf("%d",1);
+	}
+	clear();
+	freq_change(8);
+	for (i = 0; i < 24; i++){
+		rtc_read(0,0,0);
+		printf("%d",1);
+	}
+	clear();
+	freq_change(16);
+	for (i = 0; i < 32; i++){
+		rtc_read(0,0,0);
+		printf("%d",1);
+	}
+	clear();
+	freq_change(32);
+	for (i = 0; i < 64; i++){
+		rtc_read(0,0,0);
+		printf("%d",1);
+	}
+	clear();
+	freq_change(64);
+	for (i = 0; i < 80; i++){
+		rtc_read(0,0,0);
+		printf("%d",1);
+	}
+	clear();
+	freq_change(128);
+	for (i = 0; i < 100; i++){
+		rtc_read(0,0,0);
+		printf("%d",1);
+	}
+	clear();
+	freq_change(256);
+	for (i = 0; i < 120; i++){
+		rtc_read(0,0,0);
+		printf("%d",1);
+	}
+
+
 }
 
 int32_t test_read_small_files() {
@@ -299,7 +345,7 @@ void launch_tests(){
 	// TEST_OUTPUT("divide_test", divide_test());
 
 	///////////////////// DEVICE TESTS /////////////////////
-	//rtc_test();
+	rtc_test();
 	
 
 	///////////////////// PAGING TESTS /////////////////////
@@ -313,7 +359,7 @@ void launch_tests(){
 
 
 	/////////////////// TERMINAL TESTS ////////////////////
-	TEST_OUTPUT("terminalTest", terminalTest());
+	//TEST_OUTPUT("terminalTest", terminalTest());
 
 
 

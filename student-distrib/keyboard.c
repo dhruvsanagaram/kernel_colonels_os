@@ -114,9 +114,6 @@ void keyb_main(void)
     uint32_t flags;
     uint32_t userin, kb_status;
     cli_and_save(flags); // store the flags
-
-    
-
     
 
     //Reached character limit in keyboard buffer

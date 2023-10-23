@@ -229,7 +229,7 @@ int32_t puts(int8_t* s) {
 void putc(uint8_t c) {
     if (c == '\b') {
         *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x-1) << 1)) = ' ';
-        *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x-1) << 1) + 1) = 0;
+        *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x-1) << 1) + 1) = ATTRIB;
         if (screen_x == 0) {
             screen_x = NUM_COLS - 1;
             screen_y--;
@@ -257,6 +257,7 @@ void putc(uint8_t c) {
         
         scroll_up();
         //Set screen_x and screen_y to correct spot
+        
         
     }
     update_cursor(screen_x, screen_y);

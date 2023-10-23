@@ -35,8 +35,6 @@
   5. we check if the userin was a special character via the decoder:
      if so, we modify the buffer accordingly
   6. Default case: putc the userin to output
-
-
 */
 
 // global counter for number of characters
@@ -80,20 +78,6 @@ char lock_table[] = {
 };
 
     
-// char caps_table[] = {
-//     0, 0, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', '\b', '\t',
-//     'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '[', ']', '\n', 0, 'A', 'S',
-//     'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', '\'', '`', 0, '\\', 'Z', 'X', 'C', 'V',
-//     'B', 'N', 'M', ',', '.', '/', 0, 0, 0, ' '
-// };
-
-// char Sh_table[] = {
-//     0, 0, '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', '\b', '\t',
-//     'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', '\n', 0, 'A', 'S',
-//     'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '\"', '~', 0, '|', 'Z', 'X', 'C', 'V',
-//     'B', 'N', 'M', '<', '>', '?', 0, 0, 0, ' '
-//     };
-
 /* void keyb_init(void);
  * Inputs: N/A
  * Return Value: void
@@ -110,13 +94,13 @@ void keyb_init(void)
  * Return Value: void
  *  Function: interrupt handler for keyboard, prints char to screen */
 void keyb_main(void)
-{ // interrupt
+{
     uint32_t flags;
     uint32_t userin, kb_status;
     cli_and_save(flags); // store the flags
     
-
     //Reached character limit in keyboard buffer
+    //max size of buffer(not including \n)
     if (keyb_char_count == 127)
     {
         bufLimit = 1;
@@ -127,6 +111,7 @@ void keyb_main(void)
     }
 
     //Reached tab limit in keyboard buffer
+    //124 is the maximum number of chars to accomodate tab, 3 spaces
     if (keyb_char_count >= 124) {
         tabLimit = 1;
     }
@@ -140,12 +125,15 @@ void keyb_main(void)
         userin = inb(KEYB_IRQ_P);
 
         // CTRL-L
+        //0x1D = scan code for CTRL
         if (userin == 0x1D)
         {
             ctrl_pressed = 1; // CTRL pressed
             send_eoi(1);
             return;
         }
+
+        //0x26 = scan code for L
         if (ctrl_pressed == 1 && userin == 0x26)
         {
             // call function to clear screen and update cursor
@@ -155,6 +143,8 @@ void keyb_main(void)
             restore_flags(flags);
             return;
         }
+
+        //0x9D = scan code for CTRL Released
         if (userin == 0x9D)
         {
             ctrl_pressed = 0; // CTRL Released
@@ -163,7 +153,7 @@ void keyb_main(void)
         }
 
         // SHIFT
-        // Enable shift capability
+        // 0x2A = left shift, 0x36 = right shift
         if ((userin == 0x2A || userin == 0x36))
         {                      // Left shift pressed or right shifted
             shift_pressed = 1; // make this non sticky. Find a way to make sure we know if shift released?
@@ -181,11 +171,8 @@ void keyb_main(void)
 
         // CAPSLOCK
         // caps pressed once...
-        // you need to set CAPS CHAR somewhere above
         if (userin == CAPS_CHAR)
         {
-            // caps_pressed = !caps_pressed // by default 0, 0.>1
-            //  ^^^ not sure if this is needed
             if (caps_was_active)
             {
                 caps_was_active = 0; // caps deactivated
@@ -200,12 +187,6 @@ void keyb_main(void)
             restore_flags(flags);
             return;
         }
-
-        // Don't return since we want to process valid character with shift/caps presets
-        // if ((shift_pressed == 1))
-        // {
-        //     table_to_read_from = SH_TBL; // set tables to read from accordingly
-        // }
 
         //Table read decoder
         if(shift_pressed == 1){
@@ -227,9 +208,6 @@ void keyb_main(void)
             if (keyb_char_count > 0)
             {
                 key_buf[keyb_char_count] = ' '; 
-                // if(keyb_char_count <= 128){
-                //     key_buf[keyb_char_count] = ' ';
-                // }
                 keyb_char_count--;
                 putc('\b');
                 send_eoi(1);
@@ -244,6 +222,7 @@ void keyb_main(void)
         }
 
         // ENTER
+        //0x1C = ENTER key pressed
         if (userin == 0x1C)
         {
             putc('\n');
@@ -254,7 +233,7 @@ void keyb_main(void)
             return;
         }
 
-        // 0x02 = 1 , 0x3A = SPC
+        // 0x02 = 1 , 0x3A = SPC, 0x8F = tab
         if (userin < 0x3A && userin >= 0x02 && !bufLimit && userin != 0x8F)
         {
             // map the current ascii symbol from the table
@@ -265,63 +244,18 @@ void keyb_main(void)
                 case UPPER_TBL: ascii_cur = caps_table[userin]; break;
                 case LOCK_TBL: ascii_cur = lock_table[userin]; break;
             }
-            //char ascii_cur;
-            // switch (!!table_to_read_from){
-            //     case 1:
-            //         ascii_cur = caps_table[userin];
-            //         break;
-            //     case 2:
-            //         ascii_cur = Sh_table[userin];
-            //         break;
-            //     case 0:
-            //         ascii_cur = set_2_table[userin];
-            //         break;
-            //}
             if (ascii_cur)
             {
                 putc(ascii_cur); // Print the character from stdin onto the screen
-
-                //perhaps we should dbg the val of keyb_char_count + 1
-                //to verify if we need this if
-                //if (keyb_char_count + 1 < BUFF_SIZE)
-               // {
                 key_buf[keyb_char_count] = ascii_cur;
                 keyb_char_count++;
-              //  }
-                // else
-                // {
-                //     keyb_char_count++;
-                // }
             }
         }
     }
+
     //Print info about the buffer
     //printf("Keyb count:%d\n", keyb_char_count);
 
     send_eoi(1); // send End of Interrupt on the master pic(1 corresponds to IRQ1 on master PIC)
-    // sti();
     restore_flags(flags); // bring back the flags
 }
-
-// void keyb_main(void){                                       //interrupt
-//     uint32_t flags;
-//     cli_and_save(flags);                                    // store the flags
-//     uint32_t userin, kb_status;
-//     kb_status = inb(KEYB_STAT);
-//     if (kb_status & 0x01) {
-//         userin = inb(KEYB_IRQ_P);
-
-//         //0x02 = 1 , 0x3A = SPC
-//         if(userin <= 0x3A && userin >= 0x02) {              // release key
-//             char ascii_cur = set_2_table[userin];           //map the current ascii symbol from the table
-//             if (ascii_cur) {
-//                 putc(ascii_cur);                            //Print the character from stdin onto the screen
-//             }
-//         }
-//     }
-    
-//     // data,port
-//     send_eoi(0x01);                                        //send End of Interrupt on the master pic(1 corresponds to IRQ1 on master PIC)
-//     sti();
-//     restore_flags(flags);                                  // bring back the flags 
-// }

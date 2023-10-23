@@ -8,7 +8,36 @@ Checkpoint:
 Authors:
     sagnik3, dhruvs7, arasha3, rct4
 
+<================================================================>
+                              BUG 12
+<================================================================>
+problem: We weren't able to find the file that 
+         had a very large text with a very long name
 
+
+resolved by: sagnik3 & arasha3
+
+fix: We were automatically failing because when the filename was set to 32 
+or more OR less than/equal to 0, we just broke out and said bad input
+To fix this, we split the if statement between 0 and 32; if filename
+is of length greater than 32, we clip filename_len to 32
+and if it's <= 0, we return -1
+
+Time: ~10 min
+
+<================================================================>
+                              BUG 11
+<================================================================>
+problem: Nothing was being printed out when we were reading bytes 
+         in read data
+
+resolved by: arasha3
+
+fix: We were casting to the pointer type to find which block to reference in the
+absolute block number table. We used gdb to do hex subtraction to find why we were at the wrong 
+address. We removed the cast and used it as an intermediate value int32_t no pointer. 
+
+Time: 5 Hr
 
 <================================================================>
                               BUG 10
@@ -20,7 +49,7 @@ if(file_pos_in_dir + nbytes > inode->len){
     bytes_to_read = inode->len - file_pos_in_dir; //Adjust bytes that will be read if file size exceeded
 }
 
-resolved by: sagnik3
+resolved by: sagnik3 & arasha3
 
 Time: 1 Hr
 

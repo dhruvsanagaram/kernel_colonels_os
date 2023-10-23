@@ -3,6 +3,8 @@
 #include "lib.h"
 #include "keyboard.h"
 #include "filesys.h"
+#include "rtc.h"
+#include "terminal.h"
 
 #define PASS 1
 #define FAIL 0
@@ -240,7 +242,7 @@ int alltest() {
 void rtc_test() {
 	int i;
 	clear();
-	rtc_open();
+	rtc_open(0);
 	for (i = 0; i < 16; i++){
 		rtc_read(0,0,0);
 		printf("%d",1);
@@ -330,21 +332,10 @@ int terminalTest(){
 		numBytes = terminal_read(0, buffer, 128);
 		terminal_write(0, buffer, numBytes);
 
-		// terminal_write(0, "BELOW BUFFER Limit Test!\n", 25);
-		// numBytes = terminal_read(0, buffer, 5);
-		// terminal_write(0, buffer, numBytes);
-
-		// terminal_write(0, "ABOVE BUFFER Limit Test!\n", 25);
-		// numBytes = terminal_read(0, buffer, 130);
-		// terminal_write(0, buffer, numBytes);
 	}
 	return PASS;
 }
 
-int dir_test_wrapper() {
-	TEST_HEADER;
-	return dir_test;
-}
 
 
 /* Checkpoint 3 tests */
@@ -373,20 +364,19 @@ void launch_tests(){
 	// TEST_OUTPUT("page_test_vafter", page_test_vafter());
 
 
+
+	/////////////////// CHECKPOINT 2 //////////////////////
+
+
 	/////////////////// TERMINAL TESTS ////////////////////
 	// TEST_OUTPUT("terminalTest", terminalTest());
 
 	/////////////////// FILESYS TESTS /////////////////////
-
-	/********** tests for fs API funcs **********/
-
-
-
-	/********** tests for fs syscalls **********/
 	//TEST_OUTPUT("test_read_small_files", test_read_small_files());
-	dir_test();
-	// fileRead_Test();
-	// readTextFile();
+	//directory_test();
+	//readTextFile();
+	// readTextFileLarge();
+	readBin();
 
 	//kbtest(); //<-- we made this properly INT driven
 }

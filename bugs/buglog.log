@@ -8,6 +8,61 @@ Checkpoint:
 Authors:
     sagnik3, dhruvs7, arasha3, rct4
 
+
+
+<================================================================>
+                              BUG 10
+<================================================================>
+problem: Page faults encountered for file sizes that are too large
+ 
+fix: We included a control statement that checks if the current file has more bytes to be read
+if(file_pos_in_dir + nbytes > inode->len){
+    bytes_to_read = inode->len - file_pos_in_dir; //Adjust bytes that will be read if file size exceeded
+}
+
+resolved by: sagnik3
+
+Time: 1 Hr
+
+
+<================================================================>
+                              BUG 9
+<================================================================>
+problem: read_dentry_by_name was not reading filename correctly
+
+fix: filename < 32 letters was being filled up to 32 by null bytes; we needed to just end reading 
+
+
+resolved by: sagnik3
+
+Time: 30 mins
+
+<================================================================>
+                              BUG 8
+<================================================================>
+problem: read_dir was always reading the same file
+
+fix: We kept on clipping the pointer to the current file in the directory
+     being read; we instead made it a global ptr and incremented by 1 each time read_dir was called
+
+resolved by: sagnik3
+
+Time: 45 mins
+
+
+<================================================================>
+                              BUG 7
+<================================================================>
+problem: Filesystem was not properly mounted and we got page faults while initializing
+
+fix:We just needed to properly set the boot filesys base address via multiboot module;
+  we then had the mod_start passed into our filesys_init, got the boot block info, and set the dirs
+
+resolved by: sagnik3
+
+Time: ~10 mins
+
+
 <================================================================>
                               BUG 6
 <================================================================>

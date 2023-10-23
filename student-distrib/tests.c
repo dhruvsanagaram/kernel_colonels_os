@@ -360,7 +360,7 @@ void launch_tests(){
 	// TEST_OUTPUT("divide_test", divide_test());
 
 	///////////////////// DEVICE TESTS /////////////////////
-	rtc_test();
+	// rtc_test();
 	
 
 	///////////////////// PAGING TESTS /////////////////////
@@ -374,7 +374,7 @@ void launch_tests(){
 
 
 	/////////////////// TERMINAL TESTS ////////////////////
-	//TEST_OUTPUT("terminalTest", terminalTest());
+	// TEST_OUTPUT("terminalTest", terminalTest());
 
 	/////////////////// FILESYS TESTS /////////////////////
 
@@ -384,7 +384,7 @@ void launch_tests(){
 
 	/********** tests for fs syscalls **********/
 	//TEST_OUTPUT("test_read_small_files", test_read_small_files());
-	// dir_test();
+	dir_test();
 	// fileRead_Test();
 	// readTextFile();
 

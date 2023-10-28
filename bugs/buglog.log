@@ -9,19 +9,195 @@ Authors:
     sagnik3, dhruvs7, arasha3, rct4
 
 <================================================================>
+                              BUG 12
+<================================================================>
+problem: We weren't able to find the file that 
+         had a very large text with a very long name
+
+
+resolved by: sagnik3 & arasha3
+
+fix: We were automatically failing because when the filename was set to 32 
+or more OR less than/equal to 0, we just broke out and said bad input
+To fix this, we split the if statement between 0 and 32; if filename
+is of length greater than 32, we clip filename_len to 32
+and if it's <= 0, we return -1
+
+Time: ~10 min
+
+<================================================================>
+                              BUG 11
+<================================================================>
+problem: Nothing was being printed out when we were reading bytes 
+         in read data
+
+resolved by: arasha3
+
+fix: We were casting to the pointer type to find which block to reference in the
+absolute block number table. We used gdb to do hex subtraction to find why we were at the wrong 
+address. We removed the cast and used it as an intermediate value int32_t no pointer. 
+
+Time: 5 Hr
+
+<================================================================>
+                              BUG 10
+<================================================================>
+problem: Page faults encountered for file sizes that are too large
+ 
+fix: We included a control statement that checks if the current file has more bytes to be read
+if(file_pos_in_dir + nbytes > inode->len){
+    bytes_to_read = inode->len - file_pos_in_dir; //Adjust bytes that will be read if file size exceeded
+}
+
+resolved by: sagnik3 & arasha3
+
+Time: 1 Hr
+
+
+<================================================================>
+                              BUG 9
+<================================================================>
+problem: read_dentry_by_name was not reading filename correctly
+
+fix: filename < 32 letters was being filled up to 32 by null bytes; we needed to just end reading 
+
+
+resolved by: sagnik3
+
+Time: 30 mins
+
+<================================================================>
+                              BUG 8
+<================================================================>
+problem: read_dir was always reading the same file
+
+fix: We kept on clipping the pointer to the current file in the directory
+     being read; we instead made it a global ptr and incremented by 1 each time read_dir was called
+
+resolved by: sagnik3
+
+Time: 45 mins
+
+
+<================================================================>
+                              BUG 7
+<================================================================>
+problem: Filesystem was not properly mounted and we got page faults while initializing
+
+fix:We just needed to properly set the boot filesys base address via multiboot module;
+  we then had the mod_start passed into our filesys_init, got the boot block info, and set the dirs
+
+resolved by: sagnik3
+
+Time: ~10 mins
+
+
+<================================================================>
+                              BUG 6
+<================================================================>
+problem: Cursor does not move correctly with backspace input.
+
+fix: On delete, attrib was set to 0, which turned off the output in that cell. 
+Thus, when the cursor arrived at that cell, it would not output. We fixed this by 
+making delete not affect atrrib to ensure that the cursor would show.
+
+resolved by: rct4, dhruvs7
+
+Time: 30 mins
+
+<================================================================>
+                              BUG 5
+<================================================================>
+problem: When typing a command to the terminal and hitting enter(which flushes the buffer),
+we typed into the next command and then started deleting. Instead of stopping at the beginning 
+of the line(first character in the row), we kept deleting the previous command, which should
+not have happened since it was already entered in the previous prompt.
+fix: We realized that at some point we were incrementing the keyb_char_count, effectively
+allowing a backspace to happen even when it should not be possible since backspacing only requires
+that keyb_char_count is greater than zero. We noticed that in keyb_main, we were incrementing
+keyb_char_count in the penultimate if-statement that also displays printable characters to the screen.
+To fix this, we decided to putc('\b') upon receiving the backspace scan code and sended the
+end-of-interrupt.
+
+resolved by: rct4, dhruvs7
+
+Time: 1 hour
+
+<================================================================>
+                              BUG 4
+<================================================================>
+problem: We tested a case in which we entered the value "ssss" to the prompt
+and then pressed enter. This displayed "ssss", but when we typed the next command
+"aaaa" and hit enter, the previous command "ssss" was displaying, when it should
+have been "aaaa"
+
+fix: Through gdb we found that the keyboard buffer was not only storing 
+the current command "aaaa", but also storing the previous command "ssss", 
+making the combined command "ssss\naaaa\n". This is problematic because
+the keyboard buffer should be flushed upon enter. To fix this,
+we set the current location of keyb_buffer to '\0'.
+
+resolved by: dhruvs7, rct4
+
+Time: 1 hour
+
+<================================================================>
+                              BUG 3
+<================================================================>
+problem: When we were debugging, we accidentally did not close the test 
+machine and rebuild the bootimg. This corrupted the mp3.img, which effectively
+prevented future builds from incorporating the necessary changes to fix other bugs.
+
+fix: We initially did not even realize that the build was being corrupted.
+We realized this was happening when we wrote a message to the terminal
+which we was sure was implemented correctly, and this change was not reflected.
+So we read the documentation and realized that we needed to git checkout mp3.img, 
+which replaces the current version of mp3.img. This change worked.
+
+resolved by: dhruvs7, rct4
+
+Time: 30 mins
+
+
+<================================================================>
+                              BUG 2
+<================================================================>
+problem: When we typed a command to the terminal, the command 
+was being reprinted to the terminal but the newline was not being appended
+to the print back so the cursor location was directly after the print back
+instead of on the next line 
+
+fix: When we tried GDB, we noticed that the keyboard buffer was being populated
+properly with the newline being appended to the end of the message, so we 
+knew that the logic in keyboard.c was working as intended. Similarly, GDB
+showed us that the terminal buffer in terminal_write was properly populated
+with the message given by the user and the newline appended at the end. So we knew 
+the issue had to be read_bytes, since this was the only information besides the 
+terminal buffer that was shared between terminal_write and the test. After looking at
+terminal_read, we realized that terminal_read was not incrementing read_bytes, so
+all information in the terminal buffer was being read except for the penultimate 
+character, which was the newline. Therefore, we incremented read_bytes, which made
+the next command prompt start at the next line. 
+
+resolved by: dhruvs7, rct4
+
+Time: 1.5 hours
+
+<================================================================>
                               BUG 1
 <================================================================>
-problem: Upon keyboard test (migrated to interrupt driven/keyb init logic happening in keyb.c)
-         we get a segment overrun issue
+problem: When we ran test_nodebug for the first time, we were bootloading.
 
-fix:
+fix: We suspected that there was an issue with writing to video memory 
+since we thought that this put the kernel in a vulnerable state, causing GRUB
+to panic and bootload repeatedly. We commented out the changes we made to putc
+entirely and ran the putc that was provided to us, and this stopped the bootloading.
+We ended up rewriting putc for the rest of the checkpoint, but this allowed us to fix
+the other bugs 
 
-resolved by:
+resolved by: arasha3, sagnik3
 
-commmit (if any):
-
-Time:
-
+Time: 1 hour
 
 <================================================================>
 <======================>   CHECKPOINT 1   <======================>

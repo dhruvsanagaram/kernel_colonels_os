@@ -52,17 +52,14 @@ int32_t rtc_init(void) {
 void rtc_handle(void){
     outb(0x0C, RTC_PORT_ADDR);
     inb(RTC_PORT_DATA);
-    /// vv triggers whenever RTC sends interrupt
-    //printf("ADFASGJAJSAJGJ\n");
-    /// call test_interrupts for handling
+    rtcInterrupt = 1;
     send_eoi(RTC_IRQ);
 }
 
 /* void rtc_open();
  * Inputs: N/A
  * Return Value: void
- *  Function: Open RTC */
-
+ *  Function: Open RTC and set freq*/
  int32_t rtc_open(const uint8_t *filename) {
    uint32_t flags;
    cli_and_save(flags);
@@ -77,7 +74,6 @@ void rtc_handle(void){
  * Inputs: fd -- the file descriptor
  * Return Value: void
  *  Function: Close RTC */
-
  int32_t rtc_close(int32_t fd){
    return SUCCESS;
  }
@@ -86,9 +82,7 @@ void rtc_handle(void){
  * Inputs: N/A
  * Return Value: void
  *  Function: Read RTC on interrupt*/
-
 /*rtc_read must return only after an RTC interrupt has occured. You may want to use a flag here (no spinlocks)*/
-
 int32_t rtc_read(int32_t fd, void* buf, uint32_t nbytes){
   rtcInterrupt = 0;
   while(rtcInterrupt == 0);
@@ -101,14 +95,12 @@ int32_t rtc_read(int32_t fd, void* buf, uint32_t nbytes){
           *nbytes -- the number of bytes to write
  * Return Value: void
  *  Function: Write RTC */
-
  /*The write system call writes data to the terminal or to a device (RTC). In the case of the terminal, all data should
 be displayed to the screen immediately. In the case of the RTC, the system call should always accept only a 4-byte
 integer specifying the interrupt rate in Hz, and should set the rate of periodic interrupts accordingly. Writes to regular
 files should always return -1 to indicate failure since the file system is read-only. The call returns the number of bytes
 written, or -1 on failure.
 */
-
 int32_t rtc_write(int32_t fd, const void* buf, uint32_t nbytes){
   if(nbytes != 4){
     return -FAILURE;
@@ -117,12 +109,6 @@ int32_t rtc_write(int32_t fd, const void* buf, uint32_t nbytes){
   int PowerOfTwo;
   fq = *(int32_t*)buf; //cast to integer ptr type (from generic) and then deref
 
-  //Checks:
-  //Frequency OOB - fail
-  //Check if the frequency is a power of 2
-  
-
-  //Start checks: check the bounds of the frequency 
   if (fq > MAX_FQ || fq < MIN_FQ) {
     return -FAILURE;
   }
@@ -142,6 +128,7 @@ int32_t rtc_write(int32_t fd, const void* buf, uint32_t nbytes){
  *  Function: RTC clock frequency changed */
 void freq_change(uint32_t valHz) {
     uint32_t flags;
+    //32768.0 = 2^15
     int32_t rate = log2(32768.0 / valHz) + 1; // frequency =  32768 >> (rate-1);
     if(rate <= 2 || rate > 15){ // you want [3,15] inclusive
       return;
@@ -155,7 +142,10 @@ void freq_change(uint32_t valHz) {
     sti();
 }
 
-//// helper for finding the log2 of a number
+/* void log2(uint32_t val);
+ * Inputs: val -- the new frequency in Hz
+ * Return Value: int32_t log2(val)
+ *  Function: Helper that calculates log2 */
 int32_t log2(uint32_t val) {
   int32_t i = 0;
   while (val >>= 1) {

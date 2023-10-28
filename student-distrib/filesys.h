@@ -16,6 +16,8 @@
 #define DENTRY_OFFSET 64 //each dentry occupies 64B
 #define MAX_NUM_FILES 62
 #define EOF 0x0 //eof code for ending read
+#define TEST_BUFFER_SIZE 10000 //should be able to read every file 
+                               //(and clip for shorter ones)
 //////////// FILESYS STRUCTS /////////////
 
 
@@ -23,7 +25,7 @@
 typedef struct {
   int8_t filename[FILENAME_LEN];
   int32_t filetype;
-  int32_t inode_num;
+  uint32_t inode_num;
   int8_t reserved[DENTRY_RESERVED]; ///24
 } dentry_t;
 
@@ -40,23 +42,24 @@ typedef struct {
   dentry_t dentries[NUM_DENTRIES_BOOT];
 } superblock_t;
 
-typedef struct {
-    int32_t inode_num; // The inode number of the file
-    int32_t position;  // The current position within the file
-} file_d_t;
+//this does not matter until scheduling
+// typedef struct {
+//     int32_t inode_num; // The inode number of the file
+//     int32_t position;  // The current position within the file
+// } file_d_t;
 
-//array of file descriptors for each file we need to read
-file_d_t fd_arr[MAX_NUM_FILES];
+// //array of file descriptors for each file we need to read
+// file_d_t fd_arr[MAX_NUM_FILES];
 
 
 /*-- MOUNT INIT FS --*/
 int32_t init_fs(unsigned int fs_base);
 
 // Directory syscalls
-int32_t dir_open(const uint8_t *filename);
-int32_t dir_close(int32_t fd);
-int32_t dir_read(int32_t fd, void *buf, int32_t nbytes);
-int32_t dir_write(int32_t fd, const void *buf, int32_t nbytes);
+int32_t directory_open(const uint8_t *filename);
+int32_t directory_close(int32_t fd);
+int32_t directory_read(int32_t fd, void *buf, int32_t nbytes);
+int32_t directory_write(int32_t fd, const void *buf, int32_t nbytes);
 
 
 // File syscalls
@@ -73,5 +76,12 @@ int32_t read_dentry_by_index(uint32_t index, dentry_t *dentry);
 
 // read data from the file given inode num //
 int32_t read_data (uint32_t inode, uint32_t offset, uint8_t* buf, uint32_t length);
+
+///////// TESTS /////////
+int32_t directory_test();
+int32_t readTextFile();
+int32_t readTextFileLarge();
+int32_t readBin();
+
 
 #endif /* FILESYS_H */

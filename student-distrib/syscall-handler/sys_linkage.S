@@ -9,7 +9,6 @@
 # EDX 3rd arg
 # Store return value into EAX
 
-# call *sys_call_table(0, %eax, 4)
 
 handle_syscall:
   pushl   %esi
@@ -20,7 +19,9 @@ handle_syscall:
   pushl   %edx         
   pushl   %ecx         
   pushl   %ebx
+  
   pushfl
+  
   # Check if syscall number valid
   cmpl $10, %eax
   jg invalid

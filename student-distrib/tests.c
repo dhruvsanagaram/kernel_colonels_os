@@ -351,7 +351,7 @@ void launch_tests(){
 	// TEST_OUTPUT("divide_test", divide_test());
 
 	///////////////////// DEVICE TESTS /////////////////////
-	// rtc_test();
+	rtc_test();
 	
 
 	///////////////////// PAGING TESTS /////////////////////
@@ -374,9 +374,9 @@ void launch_tests(){
 	/////////////////// FILESYS TESTS /////////////////////
 	//TEST_OUTPUT("test_read_small_files", test_read_small_files());
 	//directory_test();
-	//readTextFile();
+	// readTextFile();
 	// readTextFileLarge();
-	readBin();
+	// readBin();
 
 	//kbtest(); //<-- we made this properly INT driven
 }

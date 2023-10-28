@@ -4,6 +4,7 @@
 #include "rtc.h"
 #include "keyboard.h"
 #include "int_handler.h"
+#include "syscall-handler/sys_linkage.h"
 /*
  0 #DE Divide Error Fault No DIV and IDIV instructions.
  1 #DB RESERVED Fault/
@@ -70,7 +71,6 @@ void machine_check();
 void alignment_check();
 void floating_point_SIMD();
 void onwards_20();
-void syscall_handler();
 void rtc_handler();
 //void keyb_handler();
 
@@ -142,7 +142,7 @@ void init(){
     SET_IDT_ENTRY(idt[20], onwards_20);
 
     //populate idt with system call handlers
-    SET_IDT_ENTRY(idt[SYSCALL_VEC], syscall_handler);  
+    SET_IDT_ENTRY(idt[SYSCALL_VEC], handle_syscall);  
     
     //populate idt with device interrupts -- keyboard, rtc
     idt[KEYB_IRQ_NO].seg_selector = KERNEL_CS;
@@ -368,10 +368,11 @@ void onwards_20(){
  * Inputs: N/A
  * Return Value: void
  *  Function: Syscall detected */
-void syscall_handler(){
-    printf("Syscall detected");
-    while(1);
-}
+// void syscall_handler(){
+//     printf("Syscall detected");
+//     while(1);
+// }
+////////// USE handle_syscall() INSTEAD ////////////
 
 /* void rtc_handler();
  * Inputs: N/A

@@ -243,7 +243,7 @@ void rtc_test() {
 	int i;
 	clear();
 	rtc_open(0);
-	for (i = 0; i < 16; i++){
+	for (i = 0; i < 8; i++){
 		rtc_read(0,0,0);
 		printf("%d",1);
 	}
@@ -351,7 +351,7 @@ void launch_tests(){
 	// TEST_OUTPUT("divide_test", divide_test());
 
 	///////////////////// DEVICE TESTS /////////////////////
-	// rtc_test();
+	//rtc_test();
 	
 
 	///////////////////// PAGING TESTS /////////////////////
@@ -369,14 +369,14 @@ void launch_tests(){
 
 
 	/////////////////// TERMINAL TESTS ////////////////////
-	// TEST_OUTPUT("terminalTest", terminalTest());
+	//TEST_OUTPUT("terminalTest", terminalTest());
 
 	/////////////////// FILESYS TESTS /////////////////////
-	//TEST_OUTPUT("test_read_small_files", test_read_small_files());
-	//directory_test();
+	// TEST_OUTPUT("test_read_small_files", test_read_small_files());
+	directory_test();
 	//readTextFile();
 	// readTextFileLarge();
-	readBin();
+	// readBin();
 
 	//kbtest(); //<-- we made this properly INT driven
 }

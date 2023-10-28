@@ -83,7 +83,7 @@ void rtc_handle(void){
  * Return Value: void
  *  Function: Read RTC on interrupt*/
 /*rtc_read must return only after an RTC interrupt has occured. You may want to use a flag here (no spinlocks)*/
-int32_t rtc_read(int32_t fd, void* buf, uint32_t nbytes){
+int32_t rtc_read(int32_t fd, void* buf, int32_t nbytes){
   rtcInterrupt = 0;
   while(rtcInterrupt == 0);
   return SUCCESS;
@@ -101,7 +101,7 @@ integer specifying the interrupt rate in Hz, and should set the rate of periodic
 files should always return -1 to indicate failure since the file system is read-only. The call returns the number of bytes
 written, or -1 on failure.
 */
-int32_t rtc_write(int32_t fd, const void* buf, uint32_t nbytes){
+int32_t rtc_write(int32_t fd, const void* buf, int32_t nbytes){
   if(nbytes != 4){
     return -FAILURE;
   }

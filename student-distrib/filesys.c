@@ -87,7 +87,7 @@ int32_t directory_read(int32_t fd, void *buf, int32_t nbytes){
   dentry_t the_dentry;
   int32_t bytes_to_copy;
   int len_filename;
-  if(buf == NULL || nbytes == 0){
+  if(buf == NULL || nbytes <= 0){
     return -FAILURE;
   }
   if(read_dentry_by_index(file_pos_in_dir, &the_dentry) == -FAILURE){
@@ -370,7 +370,7 @@ int32_t directory_test(){
 	directory_open(&file0);
 	uint32_t dentry_num = boot_base_addr->dentry_ct;
 
-  for(i=0; i < dentry_num; i++){
+  for(i=0; i < dentry_num; ++i){
 
     cur_dent = (dentry_t*)&(boot_base_addr->dentries[i]);
     cur_inode = (inode_t*)(inode_start_ptr + (cur_dent->inode_num));
@@ -378,7 +378,7 @@ int32_t directory_test(){
 
     directory_read(fd0,buf,noneb);
     printf("%d - NAME: ", i);
-
+    
     for(file_i = 0; file_i < FILENAME_LEN; file_i++){
       if(buf[file_i] != '\0'){
         putc(buf[file_i]);
@@ -390,7 +390,7 @@ int32_t directory_test(){
     printf("SIZE: %d\n", size);
   }
 
-  directory_close(fd0);
+  directory_close(0);
   printf("TEST PASSED :D");
   return 0;
 }

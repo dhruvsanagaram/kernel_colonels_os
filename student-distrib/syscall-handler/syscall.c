@@ -23,6 +23,18 @@ int32_t populate_fops(){
     nul_fops.read = nul_read;
     nul_fops.write = nul_write;
 
+    //ENUMERATE STDIN AND STDOUT FOR TERMINAL
+    stdin_fops.open = terminal_open;
+    stdin_fops.close = terminal_close;
+    stdin_fops.read = nul_read;
+    stdin_fops.write = terminal_write;
+
+
+    stdout_fops.open = terminal_open;
+    stdout_fops.close = terminal_close;
+    stdout_fops.read = nul_read;
+    stdout_fops.write = terminal_write;
+
     //ENUMERATE RTC_FOPS
     rtc_fops.open = rtc_open;
     rtc_fops.close = rtc_close;
@@ -41,17 +53,6 @@ int32_t populate_fops(){
     file_fops.read = file_read;
     file_fops.write = file_write;
 
-    //ENUMERATE STDIN AND STDOUT FOR TERMINAL
-    stdin_fops.open = terminal_open;
-    stdin_fops.close = terminal_close;
-    stdin_fops.read = nul_read;
-    stdin_fops.write = terminal_write;
-
-
-    stdout_fops.open = terminal_open;
-    stdout_fops.close = terminal_close;
-    stdout_fops.read = nul_read;
-    stdout_fops.write = terminal_write;
 }
 
 
@@ -106,7 +107,7 @@ int32_t open (const uint8_t* filename) {
     if(read_dentry_by_name(filename, &dentry) == -FAILURE) 
         return -FAILURE;
 
-    for(i = 0; i < 8; i++){
+    for(i = 0; i < 8; i++){ // max of 8 files
         if(!fd_arr[i].flags){
             openFd = i;
             break;

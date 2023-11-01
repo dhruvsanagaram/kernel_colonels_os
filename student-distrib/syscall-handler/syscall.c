@@ -5,6 +5,9 @@
 #include "../filesys.h"
 #include "../process.h"
 
+#define SUCCESS 0
+#define FAILURE 1
+
 
 // uint32_t curr_process = 0; //watcher for the current process being spawned
 // uint32_t par_process = 0;  //watcher for the parent process being spawned
@@ -17,6 +20,7 @@
  * Inputs: none
  * Return Value: status
  *  Function: populates the table of driver file ops */
+
 int32_t populate_fops(){
     //ENUMERATE NULL_FOPS
     nul_fops.open = nul_open;
@@ -54,6 +58,8 @@ int32_t populate_fops(){
     file_fops.read = file_read;
     file_fops.write = file_write;
 
+
+    return SUCCESS;
 }
 
 
@@ -65,8 +71,7 @@ int32_t populate_fops(){
  * Return Value: 
  *  Function:  */
 int32_t halt (uint8_t status) {
-    return system_halt();
-
+    return system_halt(status);
 }
 
 /* int32_t execute;
@@ -82,10 +87,11 @@ int32_t execute (const uint8_t* command) {
  * Return Value: 
  *  Function:  */
 int32_t read (int32_t fd, void* buf, int32_t nbytes) {
+
     //Return bytes read
     //If initial file position is at or beyond end of file, return 0
     //Get function for file type
-    return (fd_arr[fd].fops->read)(fd,buf,nbytes); //Handle error checking within each individual function type
+    return (getRunningPCB()->fd_arr[fd].fops->read)(fd,buf,nbytes); //Handle error checking within each individual function type
 
 }
 
@@ -94,10 +100,11 @@ int32_t read (int32_t fd, void* buf, int32_t nbytes) {
  * Return Value: 
  *  Function:  */
 int32_t write (int32_t fd, const void* buf, int32_t nbytes) {
-    return (fd_arr[fd].fops->write)(fd,buf,nbytes);
+    return (getRunningPCB()->fd_arr[fd].fops->write)(fd,buf,nbytes);
 }
 
 int32_t open (const uint8_t* filename) {
+    pcb_t* pcb = getRunningPCB();
     dentry_t dentry;
     int i;
     int openFd = -1;
@@ -109,7 +116,7 @@ int32_t open (const uint8_t* filename) {
         return -FAILURE;
 
     for(i = 0; i < 8; i++){ // max of 8 files
-        if(!fd_arr[i].flags){
+        if(!pcb->fd_arr[i].flags){
             openFd = i;
             break;
         }
@@ -119,29 +126,29 @@ int32_t open (const uint8_t* filename) {
 
     switch(dentry.filetype){
         case 0:
-        fd_arr[openFd].fops = &rtc_fops;
+        pcb->fd_arr[openFd].fops = &rtc_fops;
         break;
 
         case 1:
-        fd_arr[openFd].fops = &dir_fops;
+        pcb->fd_arr[openFd].fops = &dir_fops;
         break;
 
         case 2:
-        fd_arr[openFd].fops = &file_fops;
+        pcb->fd_arr[openFd].fops = &file_fops;
         break;
     }
 
     if(dentry.filetype == 0 || dentry.filetype == 1){
-        fd_arr[openFd].inode_num = 0;
+        pcb->fd_arr[openFd].inode_num = 0;
     }
     else{
-        fd_arr[openFd].inode_num = dentry.inode_num;
+        pcb->fd_arr[openFd].inode_num = dentry.inode_num;
     }
 
-    fd_arr[openFd].fpos = 0;
-    fd_arr[openFd].flags = 1;
+    pcb->fd_arr[openFd].fpos = 0;
+    pcb->fd_arr[openFd].flags = 1;
 
-    if(fd_arr[openFd].fops->open(filename) == -FAILURE){
+    if(pcb->fd_arr[openFd].fops->open(filename) == -FAILURE){
         return -FAILURE;
     }
     //return openFd;
@@ -149,27 +156,26 @@ int32_t open (const uint8_t* filename) {
 }
 
 int32_t close (int32_t fd) {
-    if(!fd_arr.flags || fd == 0 || fd == 1 || fd >= 8)
+    pcb_t* pcb = getRunningPCB();
+    if(!pcb->fd_arr[fd].flags || fd == 0 || fd == 1 || fd >= 8)
         return -FAILURE;
-    fd_arr[fd].flags = 0;
+    pcb->fd_arr[fd].flags = 0;
     
-    if(fd_arr[openFd].fops->close(filename) == -FAILURE){
+    if(pcb->fd_arr[fd].fops->close(fd) == -FAILURE){
         return -FAILURE;
     }
-    else{
-        return SUCCESS;
-    }
+    return SUCCESS;
 }
 
 int32_t getargs (uint8_t* buf, int32_t nbytes) {
     return SUCCESS;
 }
 
-int32_t vidmap (uint8_t** screen start) {
+int32_t vidmap (uint8_t** screen_start) {
     return SUCCESS;
 }
 
-int32_t set_handler (int32_t signum, void* handler address) {
+int32_t set_handler (int32_t signum, void* handler_address) {
     return SUCCESS;
 }
 

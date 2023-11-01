@@ -13,7 +13,7 @@
 #define EIGHT_KB 0x2000
 #define MAX_FILES_PER_TASK 8
 
-typdef struct {
+typedef struct {
   int32_t (*open)(const uint8_t* filename);
   int32_t (*close)(int32_t fd);
   int32_t (*read)(int32_t fd, void* buf, int32_t nbytes);
@@ -45,11 +45,13 @@ fop_t stdout_fops; //index 5
 * 
 */
 typedef struct {
-  file_d_t fdarray[MAX_FILES_PER_TASK];
+  file_d_t fd_arr[MAX_FILES_PER_TASK];
   uint32_t pid;
   uint32_t parent_pid;
+  uint32_t tss_kernel_stack_ptr; 
   uint32_t process_eip;
   uint32_t process_esp;
+  uint32_t process_ebp;
 } pcb_t;
 
 
@@ -63,14 +65,13 @@ int32_t write (int32_t fd, const void* buf, int32_t nbytes);
 int32_t open (const uint8_t* filename);
 int32_t close (int32_t fd);
 int32_t getargs (uint8_t* buf, int32_t nbytes);
-int32_t vidmap (uint8_t** screen start);
-int32_t set_handler (int32_t signum, void* handler address);
+int32_t vidmap (uint8_t** screen_start);
+int32_t set_handler (int32_t signum, void* handler_address);
 int32_t sigreturn (void);
 
 
 /////////////// HELPERS //////////////
 int32_t populate_fops(); //populate file ops
-i
 //null fileops to pass
 int32_t nul_read (int32_t fd, void* buf, int32_t nbytes);
 int32_t nul_write (int32_t fd, const void* buf, int32_t nbytes);

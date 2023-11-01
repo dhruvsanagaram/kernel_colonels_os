@@ -2,10 +2,12 @@
 #include "lib.h"
 #include "filesys.h"
 #include "page.h"
+#include "x86_desc.h"
 
-int32_t process_slots[2];
-    process_slots[0] = 0;
-    process_slots[1] = 0;
+#define SUCCESS 0
+#define FAILURE 1
+
+int32_t process_slots[2] = {0, 0};
 uint32_t cur_PID = -1;    //watcher for current pid being executed
 // uint32_t backlog_pid = -1; //watcher for the backlog (parent pid) for subsequently spawned processes
 
@@ -71,7 +73,7 @@ int32_t system_halt(uint8_t status){
     tss.esp0 = 0x800000 - 0x2000 * (parent_pcb->pid+1) - sizeof(int32_t);
 
     //Restore parent paging(& flush TLB)
-    user_set_page(cur_PID);
+    user_page_setup(cur_PID);
     //flush tlb
     asm volatile(
         "movl %%cr3, %%eax\n\t"             
@@ -89,19 +91,20 @@ int32_t system_halt(uint8_t status){
     }
 
     //Jump to execute return
-    uint32_t esp, eip;
-    eip = parent_pcb->process_user_eip;
-    esp = parent_pcb->process_user_esp;
+    uint32_t esp, ebp;
+    ebp = parent_pcb->process_ebp;
+    esp = parent_pcb->process_esp;
 
     sti();
     asm volatile(
         "movl %0, %%esp\n\t"
-        "movl %1, %%eip\n\t"
+        "movl %1, %%ebp\n\t"
+        "movl %2, %%eax\n\t"
         "jmp EXECUTE_RETURN "
-        : : "r"(esp), "r"(eip)
+        : : "r"(esp), "r"(ebp), "r"(lower_status)
         : "eax", "memory", "cc"
     );
-    return SUCCESS;
+    return status;
 }
 
 /**
@@ -144,15 +147,14 @@ int32_t system_execute(const uint8_t* command) {
 
     //Check if command exists and executable
     dentry_t dentry;
-    uint8_t* buffer[40];
-    if(read_dentry_by_name(cmd[0], &dentry) == -FAILURE 
+    uint8_t buffer[40];
+    if(read_dentry_by_name(&cmd[0], &dentry) == -FAILURE 
         || (read_data(dentry.inode_num, 0, buffer, 40) != 40)
         || (buffer[0] != 0x7F || buffer[1] != 0x45 || buffer[2] != 0x4C || buffer[3] != 0x46)){
         return -FAILURE;
     }
 
     //Get a PID
-    int i;
     int32_t check_PID = -1;
     for (i = 0; i < 2; i++) {
         if (process_slots[i] == 0){
@@ -175,7 +177,7 @@ int32_t system_execute(const uint8_t* command) {
     );
 
     //Load file
-    inode_t* prog_img_inode = &inode_start_ptr(dentry.inode_num);
+    inode_t* prog_img_inode = &inode_start_ptr[dentry.inode_num];
     if (read_data(dentry.inode_num, 0, (uint8_t*)0x0804800, prog_img_inode->len) == -FAILURE) {
         return -FAILURE;
     }
@@ -217,16 +219,17 @@ int32_t system_execute(const uint8_t* command) {
     }
     eip = *((int32_t*)(eip_buffer));
     esp = 0x8400000 - sizeof(int32_t);                          // USER MEMORY ADDRESS + 4 MEGABYTE PAGE FOR START (and int32_t align)
-    pcb->process_user_eip = eip;
-    pcb->process_user_esp = esp;
+    pcb->process_eip = eip;
+    pcb->process_esp = esp;
     tss.ss0 = KERNEL_DS; // line right
     tss.esp0 = 0x800000 - (0x2000*cur_PID) - sizeof(int32_t);   //might be wrong and we have to 4Byte align
     pcb->tss_kernel_stack_ptr = tss.esp0;
     // setupIRET();
     //Push IRET Context to Stack
     sti();
+
     asm volatile(
-        "movw %%ax, %ds\n\t" // Move USER_DS from eax to data segment
+        "movw %%ax, %%ds\n\t" // Move USER_DS from eax to data segment
         "pushl %%eax\n\t" //push user data segment to the stack
         "pushl %%ebx\n\t" //push esp argument from pcb into stack
         "pushfl\n\t" //push flags to the stack

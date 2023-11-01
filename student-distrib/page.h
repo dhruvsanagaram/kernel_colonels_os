@@ -61,7 +61,7 @@ page_table_entry_t page_video_map[PAGE_SIZE] __attribute__((aligned(FOUR_KB)));
 
 
 //user page setup
-void user_page_setup(int32_t cur_PID);
+extern void user_page_setup(int32_t cur_PID);
 
 #endif
 #endif

@@ -22,6 +22,7 @@
 
 
 
+
 typedef struct {
   int8_t filename[FILENAME_LEN];
   int32_t filetype;
@@ -82,6 +83,14 @@ int32_t directory_test();
 int32_t readTextFile();
 int32_t readTextFileLarge();
 int32_t readBin();
+
+
+
+extern superblock_t *boot_base_addr;
+extern inode_t* inode_start_ptr;
+extern dentry_t* dentry_start_ptr;
+extern uint32_t* data_block_ptr;
+extern uint32_t file_pos_in_dir;
 
 
 #endif /* FILESYS_H */

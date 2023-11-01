@@ -13,6 +13,7 @@
 #include "rtc.h"
 #include "keyboard.h"
 #include "filesys.h"
+#include "syscall-handler/syscall.h"
 
 #define RUN_TESTS
 
@@ -170,6 +171,8 @@ void entry(unsigned long magic, unsigned long addr) {
     rtc_init();
     keyb_init();
     page_init();
+    populate_fops(); //fop ops ready
+    // user_page_setup(0);
 
     
 
@@ -184,7 +187,8 @@ void entry(unsigned long magic, unsigned long addr) {
 
 #ifdef RUN_TESTS
     /* Run tests */
-    launch_tests();
+    execute((uint8_t*)("shell")); //drop shell
+    // launch_tests();
 #endif
     /* Execute the first program ("shell") ... */
 

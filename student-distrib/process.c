@@ -1,6 +1,5 @@
 #include "process.h"
 #include "lib.h"
-#include "filesys.h"
 #include "page.h"
 #include "x86_desc.h"
 
@@ -107,6 +106,57 @@ int32_t system_halt(uint8_t status){
     return status;
 }
 
+
+/**
+* parse_command
+* inputs: const uint8_t* command, uint8_t* cmd, uint8_t* arg1
+* output: void
+* side effects: Parse command into cmd, args
+*/
+void parse_command(const uint8_t* command, uint8_t* cmd, uint8_t *arg1){
+    int i, j;
+    //cmd and arg1 initialized
+    //was max_buff
+    for (i = 0; i < MAX_BUF; i++) {
+        if (command[i] == ' ' || command[i] == '\0' || command[i] == '\n') {
+            cmd[i] = '\0';
+            break;
+        }
+        else {
+            cmd[i] = command[i];
+        }
+    }
+    if (command[i] != '\0') {
+        i++;
+        j = 0;
+        for (;i < MAX_BUF; i++) {
+            if (command[i] == ' ' || command[i] == '\0' || command[i] == '\n') {
+                arg1[j] = '\0';
+                break;
+            }
+            else {
+                arg1[j] = command[i];
+            }
+            j++;
+        }       
+    }
+}
+
+/**
+* check_exec
+* inputs: dentry_t dentry, uint8_t* buffer, uint8_t* cmd
+* output: bool true/false
+* side effects: check executable
+*/
+int32_t check_exec(dentry_t* dentry, uint8_t* buffer, uint8_t* cmd){
+    if(read_dentry_by_name(&cmd[0], dentry) == -FAILURE 
+        || (read_data(dentry->inode_num, 0, buffer, 40) != 40)
+        || (buffer[0] != 0x7F || buffer[1] != 0x45 || buffer[2] != 0x4C || buffer[3] != 0x46)){
+        return 0; //not executable
+    }
+    return 1; //is executable
+}
+
 /**
 * system_execute
 * inputs: const uint8_t* command
@@ -120,40 +170,45 @@ int32_t system_execute(const uint8_t* command) {
                 program on request via the getargs system call.
                 */
 
+    ////PARSE COMMANDS AND ARGS
+    int i;
     uint8_t cmd[CMD_SIZE];
     uint8_t arg1[ARG_SIZE];
-    int i;
-    for (i = 0; i < MAX_BUF; i++) {
-        if (command[i] == ' ' || command[i] == '\0' || command[i] == '\n') {
-            cmd[i] = '\0';
-            break;
-        }
-        else {
-            cmd[i] = command[i];
-        }
-    }
-    if (command[i] != '\0') {
-        i++;
-        for (;i < MAX_BUF; i++) {
-            if (command[i] == ' ' || command[i] == '\0' || command[i] == '\n') {
-                arg1[i] = '\0';
-                break;
-            }
-            else {
-                arg1[i] = command[i];
-            }
-        }       
-    }
+    parse_command(command, cmd, arg1);
+    // int i;
+    // for (i = 0; i < MAX_BUF; i++) {
+    //     if (command[i] == ' ' || command[i] == '\0' || command[i] == '\n') {
+    //         cmd[i] = '\0';
+    //         break;
+    //     }
+    //     else {
+    //         cmd[i] = command[i];
+    //     }
+    // }
+    // if (command[i] != '\0') {
+    //     i++;
+    //     for (;i < MAX_BUF; i++) {
+    //         if (command[i] == ' ' || command[i] == '\0' || command[i] == '\n') {
+    //             arg1[i] = '\0';
+    //             break;
+    //         }
+    //         else {
+    //             arg1[i] = command[i];
+    //         }
+    //     }       
+    // }
 
     //Check if command exists and executable
     dentry_t dentry;
     uint8_t buffer[40];
-    if(read_dentry_by_name(&cmd[0], &dentry) == -FAILURE 
-        || (read_data(dentry.inode_num, 0, buffer, 40) != 40)
-        || (buffer[0] != 0x7F || buffer[1] != 0x45 || buffer[2] != 0x4C || buffer[3] != 0x46)){
-        return -FAILURE;
-    }
-
+    // if(read_dentry_by_name(&cmd[0], &dentry) == -FAILURE 
+    //     || (read_data(dentry.inode_num, 0, buffer, 40) != 40)
+    //     || (buffer[0] != 0x7F || buffer[1] != 0x45 || buffer[2] != 0x4C || buffer[3] != 0x46)){
+    //     return -FAILURE;
+    // }
+    printf("Checking exec...");
+    if(!check_exec(&dentry, buffer, cmd)) return -FAILURE;
+    printf("Shit is exec...");
     //Get a PID
     int32_t check_PID = -1;
     for (i = 0; i < 2; i++) {
@@ -178,10 +233,15 @@ int32_t system_execute(const uint8_t* command) {
 
     //Load file
     inode_t* prog_img_inode = &inode_start_ptr[dentry.inode_num];
-    if (read_data(dentry.inode_num, 0, (uint8_t*)0x0804800, prog_img_inode->len) == -FAILURE) {
+    uint8_t prog_img_buf[10000];
+    printf("Reading data...");
+    if (read_data(dentry.inode_num, 0, prog_img_buf, prog_img_inode->len) == -FAILURE) {
+        printf("cock!");
         return -FAILURE;
     }
-
+    printf("Copying to program image...");
+    memcpy((uint8_t*)0x08048000,prog_img_buf,prog_img_inode->len);
+    printf("Balls...");
     pcb_t* pcb = (pcb_t*)(0x0800000 - (0x2000 * (cur_PID + 1)));
     pcb->pid = cur_PID;
     if(cur_PID == 0){
@@ -218,27 +278,42 @@ int32_t system_execute(const uint8_t* command) {
         return -FAILURE;
     }
     eip = *((int32_t*)(eip_buffer));
-    esp = 0x8400000 - sizeof(int32_t);                          // USER MEMORY ADDRESS + 4 MEGABYTE PAGE FOR START (and int32_t align)
+    esp = USER_ADDR - EIGHT_KB*(cur_PID+1);                          // USER MEMORY ADDRESS + 4 MEGABYTE PAGE FOR START (and int32_t align)
     pcb->process_eip = eip;
-    pcb->process_esp = esp;
+    pcb->process_esp = esp; 
     tss.ss0 = KERNEL_DS; // line right
-    tss.esp0 = 0x800000 - (0x2000*cur_PID) - sizeof(int32_t);   //might be wrong and we have to 4Byte align
+    tss.esp0 = 0x800000 - (0x2000*(cur_PID+1));   //might be wrong and we have to 4Byte align
     pcb->tss_kernel_stack_ptr = tss.esp0;
     // setupIRET();
     //Push IRET Context to Stack
     sti();
 
+    // printf("\nEntering cock\n");
     asm volatile(
-        "movw %%ax, %%ds\n\t" // Move USER_DS from eax to data segment
+        "movw %%ax, %%ds " // Move USER_DS from eax to data segment
+        : : "a"(USER_DS)
+        : "cc", "memory"
+    );
+    // printf("cock 1\n");
+    asm volatile(
         "pushl %%eax\n\t" //push user data segment to the stack
         "pushl %%ebx\n\t" //push esp argument from pcb into stack
         "pushfl\n\t" //push flags to the stack
         "pushl %%ecx\n\t" //push user context to stack
-        "pushl %%edx\n\t" //push eip argument from pcb into stack
-        "iret\n\t" //interrupt ret
-        "EXECUTE_RETURN: " //interrupt ret
+        "pushl %%edx " //push eip argument from pcb into stack
         : : "a"(USER_DS), "b"(esp), "c"(USER_CS), "d"(eip)
         : "cc", "memory"
     );
+    // printf("cock 2 \n");
+    asm volatile(
+        "iret\n\t" //interrupt ret
+        "EXECUTE_RETURN: " //interrupt ret
+        : : : "memory"
+    );
+    printf("AMBAOUTAKUM \n");
+
+    // iretContext(esp, eip);
+
+    // sti();
     return SUCCESS;
 }

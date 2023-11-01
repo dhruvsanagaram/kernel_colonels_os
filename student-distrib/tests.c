@@ -5,6 +5,8 @@
 #include "filesys.h"
 #include "rtc.h"
 #include "terminal.h"
+#include "syscall-handler/syscall.h"
+#include "process.h"
 
 #define PASS 1
 #define FAIL 0
@@ -339,6 +341,49 @@ int terminalTest(){
 
 
 /* Checkpoint 3 tests */
+
+//// test if we can properly parse commands
+int parseCommandTest(){
+	uint8_t cmd[10];
+    uint8_t arg1[128];
+	int i;
+	//parse a given shell command
+	parse_command(((uint8_t*)("shell testarghere")), cmd, arg1);
+	//printf("Cmd: ");
+	for(i = 0; i < 5; i++){
+		putc(cmd[i]);
+		// printf("%d", i);
+		// putc(' ');
+	}
+	putc('\n');
+	//printf("Args: ");
+	for(i = 0; i < 128; i++){
+		putc(arg1[i]);
+		// printf("%d", i);
+		// putc(' ');
+	}
+	putc('\n');
+
+	return PASS;
+}
+
+int check_exec_test(){
+	TEST_HEADER;
+	uint8_t cmd[10];
+    uint8_t arg1[128];
+	dentry_t dentry;
+	uint8_t* buffer;
+	parse_command(((uint8_t*)("grep test")), cmd, arg1);
+	
+	if(check_exec(&dentry, buffer, cmd)){
+		return PASS;
+	}
+	return FAIL;
+}
+
+
+
+
 /* Checkpoint 4 tests */
 /* Checkpoint 5 tests */
 
@@ -373,10 +418,18 @@ void launch_tests(){
 
 	/////////////////// FILESYS TESTS /////////////////////
 	// TEST_OUTPUT("test_read_small_files", test_read_small_files());
-	directory_test();
+	// directory_test();
 	//readTextFile();
 	// readTextFileLarge();
 	// readBin();
+
+
+
+	/////////////////// CHECKPOINT 3 //////////////////////
+
+	///////////////// SYSCALL TESTS //////////////////////
+	//parseCommandTest();
+	printf("%d",check_exec_test());
 
 	//kbtest(); //<-- we made this properly INT driven
 }

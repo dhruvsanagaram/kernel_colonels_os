@@ -48,6 +48,8 @@ typedef struct {
   file_d_t fdarray[MAX_FILES_PER_TASK];
   uint32_t pid;
   uint32_t parent_pid;
+  uint32_t process_eip;
+  uint32_t process_esp;
 } pcb_t;
 
 
@@ -68,8 +70,7 @@ int32_t sigreturn (void);
 
 /////////////// HELPERS //////////////
 int32_t populate_fops(); //populate file ops
-int32_t get_pcb(); //return the current operating pcb based on curr_process global watcher
-
+i
 //null fileops to pass
 int32_t nul_read (int32_t fd, void* buf, int32_t nbytes);
 int32_t nul_write (int32_t fd, const void* buf, int32_t nbytes);

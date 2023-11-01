@@ -3,10 +3,11 @@
 #include "../rtc.h"
 #include "../terminal.h"
 #include "../filesys.h"
+#include "../process.h"
 
 
-uint32_t curr_process = 0; //watcher for the current process being spawned
-uint32_t par_process = 0;  //watcher for the parent process being spawned
+// uint32_t curr_process = 0; //watcher for the current process being spawned
+// uint32_t par_process = 0;  //watcher for the parent process being spawned
 
 /*The halt system call terminates a process, returning the specified value to its parent process.*/
 
@@ -64,7 +65,7 @@ int32_t populate_fops(){
  * Return Value: 
  *  Function:  */
 int32_t halt (uint8_t status) {
-    //Kill me
+    return system_halt();
 
 }
 
@@ -73,7 +74,7 @@ int32_t halt (uint8_t status) {
  * Return Value: 
  *  Function:  */
 int32_t execute (const uint8_t* command) {
-    //Fuck
+    return system_execute(command);
 }
 
 /* int32_t read;
@@ -161,19 +162,19 @@ int32_t close (int32_t fd) {
 }
 
 int32_t getargs (uint8_t* buf, int32_t nbytes) {
-
+    return SUCCESS;
 }
 
 int32_t vidmap (uint8_t** screen start) {
-
+    return SUCCESS;
 }
 
 int32_t set_handler (int32_t signum, void* handler address) {
-
+    return SUCCESS;
 }
 
 int32_t sigreturn (void) {
-
+    return SUCCESS;
 }
 
 //////////// NULL SYSCALLS (all return -1 as they are null) ////////////

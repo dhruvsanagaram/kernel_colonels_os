@@ -20,6 +20,12 @@ int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes){
 
     read_bytes = 0;
     
+    /*
+    if (key_buf[i] == '\n') {
+
+    }
+    */
+
     for (i = 0; i < nbytes - 1; i++) {
 
         if (key_buf[i] == '\n') { 

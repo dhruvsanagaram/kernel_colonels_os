@@ -217,7 +217,7 @@ void breakpoint(){
  *  Function: Overflow Trap */
 void overflow(){
     printf("Overflow Trap");
-    while(1);
+    halt(256);
 }
 
 /* void bounds_range();

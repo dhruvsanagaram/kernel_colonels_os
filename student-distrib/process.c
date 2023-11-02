@@ -277,8 +277,8 @@ int32_t system_execute(const uint8_t* command) {
     if(read_data(dentry.inode_num, 24, eip_buffer, sizeof(int32_t)) == -FAILURE){
         return -FAILURE;
     }
-    eip = *((int32_t*)(eip_buffer));
-    esp = USER_ADDR - EIGHT_KB*(cur_PID+1);                          // USER MEMORY ADDRESS + 4 MEGABYTE PAGE FOR START (and int32_t align)
+    eip = *((int*)(eip_buffer));
+    esp = USER_ADDR - EIGHT_KB*(cur_PID+1);                          // USER MEMORY ADDRESS + 4 MEGABYTE PAGE FOR START (and int32_t align)= 
     pcb->process_eip = eip;
     pcb->process_esp = esp; 
     tss.ss0 = KERNEL_DS; // line right
@@ -288,29 +288,37 @@ int32_t system_execute(const uint8_t* command) {
     //Push IRET Context to Stack
     sti();
 
-    // printf("\nEntering cock\n");
+    // asm volatile(
+    //     "movw %%ax, %%ds " // Move USER_DS from eax to data segment
+    //     : : "a"(USER_DS)
+    //     : "cc", "memory"
+    // );
+    // asm volatile(
+    //     "pushl %%eax\n\t" //push user data segment to the stack
+    //     "pushl %%ebx\n\t" //push esp argument from pcb into stack
+    //     "pushfl\n\t" //push flags to the stack
+    //     "pushl %%ecx\n\t" //push user context to stack
+    //     "pushl %%edx " //push eip argument from pcb into stack
+    //     : : "a"(USER_DS), "b"(esp), "c"(USER_CS), "d"(eip)
+    //     : "cc", "memory"
+    // );
+    // asm volatile(
+    //     "iret\n\t" //interrupt ret
+    //     "EXECUTE_RETURN: " //interrupt ret
+    //     : : : "memory"
+    // );
     asm volatile(
-        "movw %%ax, %%ds " // Move USER_DS from eax to data segment
-        : : "a"(USER_DS)
-        : "cc", "memory"
-    );
-    // printf("cock 1\n");
-    asm volatile(
+        "movw %%ax, %%ds\n\t" // Move USER_DS from eax to data segment
         "pushl %%eax\n\t" //push user data segment to the stack
         "pushl %%ebx\n\t" //push esp argument from pcb into stack
         "pushfl\n\t" //push flags to the stack
         "pushl %%ecx\n\t" //push user context to stack
-        "pushl %%edx " //push eip argument from pcb into stack
+        "pushl %%edx\n\t" //push eip argument from pcb into stack
+        "iret\n\t" //interrupt ret
+        "EXECUTE_RETURN: " //interrupt ret
         : : "a"(USER_DS), "b"(esp), "c"(USER_CS), "d"(eip)
         : "cc", "memory"
     );
-    // printf("cock 2 \n");
-    asm volatile(
-        "iret\n\t" //interrupt ret
-        "EXECUTE_RETURN: " //interrupt ret
-        : : : "memory"
-    );
-    printf("AMBAOUTAKUM \n");
 
     // iretContext(esp, eip);
 

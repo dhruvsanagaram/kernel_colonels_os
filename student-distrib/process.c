@@ -59,7 +59,7 @@ int32_t system_halt(uint8_t status){
 
     pcb_t* pcb = getRunningPCB();               //get the running PCB
     if(pcb == NULL){
-        printf("HALT: No running process ATM\n");
+        printf("HALT: No running process ATM\n");  
         return -FAILURE;
     }
     if(pcb->pid == 0){
@@ -67,14 +67,14 @@ int32_t system_halt(uint8_t status){
     }
 
     //Restore parent data
-    pcb_t* parent_pcb = (pcb_t*)(0x800000 - 0x2000 * (pcb->parent_pid+1));
+    pcb_t* parent_pcb = (pcb_t*)(0x800000 - 0x2000 * (pcb->parent_pid+1));  //retrieve parent_pcb start address
     cur_PID = parent_pcb->pid;
     tss.ss0 = KERNEL_DS;
     tss.esp0 = 0x800000 - 0x2000 * (parent_pcb->pid+1) - sizeof(int32_t);
 
     //Restore parent paging(& flush TLB)
     user_page_setup(cur_PID);
-    //flush tlb
+
     asm volatile(
         "movl %%cr3, %%eax\n\t"             
         "movl %%eax, %%cr3 "
@@ -117,7 +117,6 @@ int32_t system_halt(uint8_t status){
 void parse_command(const uint8_t* command, uint8_t* cmd, uint8_t *arg1){
     int i, j;
     //cmd and arg1 initialized
-    //was max_buff
     for (i = 0; i < MAX_BUF; i++) {
         if (command[i] == ' ' || command[i] == '\0' || command[i] == '\n') {
             cmd[i] = '\0';
@@ -150,6 +149,8 @@ void parse_command(const uint8_t* command, uint8_t* cmd, uint8_t *arg1){
 * side effects: check executable
 */
 int32_t check_exec(dentry_t* dentry, uint8_t* buffer, uint8_t* cmd){
+
+    //retrieves the dentry given the filename and reads 40 bytes of data and checks executable
     if(read_dentry_by_name(&cmd[0], dentry) == -FAILURE 
         || (read_data(dentry->inode_num, 0, buffer, 40) != 40)
         || (buffer[0] != 0x7F || buffer[1] != 0x45 || buffer[2] != 0x4C || buffer[3] != 0x46)){
@@ -166,22 +167,21 @@ int32_t check_exec(dentry_t* dentry, uint8_t* buffer, uint8_t* cmd){
 */
 int32_t system_execute(const uint8_t* command) {
     //Parse args
-    cli();      /* The command is a space-separated sequence of words. The first word is the file name of the
-                program to be executed, and the rest of the command—stripped of leading spaces—should be provided to the new
-                program on request via the getargs system call.
-                */
+    cli();      
 
     ////PARSE COMMANDS AND ARGS
     int i;
     uint8_t cmd[CMD_SIZE];
     uint8_t arg1[ARG_SIZE];
     parse_command(command, cmd, arg1);
+
     //Check if command exists and executable
     dentry_t dentry;
     uint8_t buffer[40];
     printf("Checking exec...");
     if(!check_exec(&dentry, buffer, cmd)) return -FAILURE;
-    //Get a PID
+    
+    //Get a free PID
     int32_t check_PID = -1;
     for (i = 0; i < 2; i++) {
         if (process_slots[i] == 0){
@@ -230,11 +230,8 @@ int32_t system_execute(const uint8_t* command) {
         pcb->parent_pid = pcb->pid; 
     }
     else {
-        //get the current pcb somehow 
-        //and set parent_pid to the pid of the current running pcb
         pcb->parent_pid = cur_PID - 1;
         //pcb->parent_pid = backlog_pid;
-        //backlog_pid = cur_PID; //Subsequently spawned processes will be attributed to the current PID executed
     }
 
     pcb->fd_arr[0].fops = &stdin_fops;
@@ -274,26 +271,6 @@ int32_t system_execute(const uint8_t* command) {
     //Push IRET Context to Stack
     // sti();
 
-    // asm volatile(
-    //     "movw %%ax, %%ds " // Move USER_DS from eax to data segment
-    //     : : "a"(USER_DS)
-    //     : "cc", "memory"
-    // );
-    // asm volatile(
-    //     "pushl %%eax\n\t" //push user data segment to the stack
-    //     "pushl %%ebx\n\t" //push esp argument from pcb into stack
-    //     "pushfl\n\t" //push flags to the stack
-    //     "pushl %%ecx\n\t" //push user context to stack
-    //     "pushl %%edx " //push eip argument from pcb into stack
-    //     : : "a"(USER_DS), "b"(esp), "c"(USER_CS), "d"(pcb->process_eip)
-    //     : "cc", "memory"
-    // );
-    // asm volatile(
-    //     "iret\n\t" //interrupt ret
-    //     "EXECUTE_RETURN: " //interrupt ret
-    //     : : : "memory"
-    // );
-
     printf("\n%x",eip);
     printf("\n%x",esp);
     printf("\n%x",tss.esp0);
@@ -316,8 +293,6 @@ int32_t system_execute(const uint8_t* command) {
         "iret\n\t" //interrupt ret
         "EXECUTE_RETURN: " //interrupt ret
     );
-
-    // iretContext(esp, eip);
 
     // sti();
     return SUCCESS;

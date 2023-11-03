@@ -20,8 +20,6 @@ handle_syscall:
   pushl   %ecx         
   pushl   %ebx
   
-  pushfl
-  
   # Check if syscall number valid
   cmpl $10, %eax
   jg invalid
@@ -36,7 +34,6 @@ invalid:
 
 dispatch_syscall:
   #Restore registers
-  popfl # restore flags
   popl %ebx
   popl %ecx
   popl %edx

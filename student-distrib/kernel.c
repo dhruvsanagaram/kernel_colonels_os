@@ -188,6 +188,7 @@ void entry(unsigned long magic, unsigned long addr) {
 #ifdef RUN_TESTS
     /* Run tests */
     execute((uint8_t*)("shell")); //drop shell
+    // execute((uint8_t*)("testprint"));
     // launch_tests();
 #endif
     /* Execute the first program ("shell") ... */

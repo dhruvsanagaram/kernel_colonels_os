@@ -306,6 +306,12 @@ void gen_protection(){
  * Return Value: void
  *  Function: page_fault(); */
 void page_fault(){
+    int err_code;
+    asm volatile (
+            "movl %%cr2, %0"
+        : "=r" (err_code)
+    );
+    printf("%x", err_code);
     printf("page fault");
     while(1);
 }

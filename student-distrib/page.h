@@ -9,7 +9,7 @@
 #define FOUR_KB 4096 //2^12 bytes
 #define EIGHT_KB 0x2000
 #define KERNEL_ADDR 0x400000 //start of kmem in physical media
-#define USER_ADDR 0x800000 //start of virtual user mem 
+#define USER_ADDR 0x8000000 //start of virtual user mem (128MB)
 #define VIDEO_ADDR 0xB8000 //start of video memory
 #define PAGE_SIZE 1024 //number of pages in dir
 #define KERNEL_IDX 1

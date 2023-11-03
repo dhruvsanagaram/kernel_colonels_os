@@ -11,10 +11,6 @@
 #define USER_INDEX 32
 #define NEAREST_8KB_BOUND 0x007fe000 //8MB - 8KB
 
-
-
-
-
 // pcb_t* get_pcb(); //return the current operating pcb based on curr_process global watcher
 // pcb_t* get_pcb_from_pid(uint32_t pid); //return the pcb based on the given pid
 int32_t system_execute(const uint8_t* command);

@@ -7,6 +7,7 @@
 
 int main ()
 {
+	while(1);
     int32_t cnt, rval;
     uint8_t buf[BUFSIZE];
     ece391_fdputs (1, (uint8_t*)"Starting 391 Shell\n");

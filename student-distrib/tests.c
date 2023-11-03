@@ -429,7 +429,8 @@ void launch_tests(){
 
 	///////////////// SYSCALL TESTS //////////////////////
 	//parseCommandTest();
-	printf("%d",check_exec_test());
+	//printf("%d",check_exec_test());
+	//system_execute((uint8_t*)("testprint"));
 
 	//kbtest(); //<-- we made this properly INT driven
 }

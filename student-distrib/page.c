@@ -45,20 +45,21 @@ void page_init() {
           page_directory[i].accessed = 0;
           page_directory[i].ps_bit = 1;  //each page here is 4MB
           page_directory[i].reserved = 0;
+          page_directory[i].global = 1;
         }
-        // else if (i == USER_IDX) {
-        //   //set up user virtual memory
-        //   // init_dir_entry(&page_directory[i], 1, 1, ((uint32_t)USER_ADDR / FOUR_KB));
-        //   page_directory[i].user = 1;
-        //   page_directory[i].present = 1;
-        //   page_directory[i].base_addr = USER_ADDR / FOUR_KB;
-        //   page_directory[i].rw = 1;
-        //   page_directory[i].write_through = 0;
-        //   page_directory[i].cache_disable = 0;
-        //   page_directory[i].accessed = 0;
-        //   page_directory[i].ps_bit = 1;
-        //   page_directory[i].reserved = 0;       
-        // } 
+        else if (i == USER_IDX) {
+          //set up user virtual memory
+          // init_dir_entry(&page_directory[i], 1, 1, ((uint32_t)USER_ADDR / FOUR_KB));
+          page_directory[i].user = 1;
+          page_directory[i].present = 1;
+          page_directory[i].base_addr = USER_ADDR / FOUR_KB;     
+          page_directory[i].ps_bit = 1;
+          page_directory[i].rw = 1;
+          page_directory[i].reserved = 0;
+          page_directory[i].write_through = 0;
+          page_directory[i].cache_disable = 0;
+          page_directory[i].accessed = 0;
+        } 
         else {
           //set up remaining memory
           page_directory[i].user = 0;
@@ -83,8 +84,8 @@ void page_init() {
       else{
         page_tables[i].present= 1;
       }
-      page_tables[i].base_addr = i; 
-      page_tables[i].rw = 1;  
+      page_tables[i].base_addr = i;
+      page_tables[i].rw = 1;
       page_tables[i].user = 0;
       page_tables[i].write_through = 0; 
       page_tables[i].cache_disable = 0; 
@@ -114,14 +115,9 @@ void page_init() {
 
 //Helper to set USER_IDX page tables
 void user_page_setup(int32_t cur_PID){
-  page_directory[USER_IDX].user = 1;
-  page_directory[USER_IDX].present = 1;
   //page_directory[USER_IDX].base_addr = USER_ADDR / FOUR_KB;
-  page_directory[USER_IDX].base_addr = (USER_ADDR - EIGHT_KB*(cur_PID+1)) / FOUR_KB;
-  page_directory[USER_IDX].rw = 1;
-  page_directory[USER_IDX].write_through = 0;
-  page_directory[USER_IDX].cache_disable = 0;
-  page_directory[USER_IDX].accessed = 0;
+  // page_directory[USER_IDX].base_addr = (USER_ADDR - EIGHT_KB*(cur_PID+1)) / FOUR_KB;
+  page_directory[USER_IDX].base_addr = (0x800000 + cur_PID*KERNEL_ADDR) / FOUR_KB;
   page_directory[USER_IDX].ps_bit = 1;
-  page_directory[USER_IDX].reserved = 0;  
+
 }

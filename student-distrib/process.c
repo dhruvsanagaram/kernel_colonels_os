@@ -223,8 +223,6 @@ int32_t system_execute(const uint8_t* command) {
 
     // memcpy((uint8_t*)0x08048000,prog_img_buf,prog_img_inode->len);
 
-    printf("THERE IS NO END");
-
     pcb_t* pcb = (pcb_t*)(0x0800000 - (0x2000 * (cur_PID + 1)));
     pcb->pid = cur_PID;
     if(cur_PID == 0){

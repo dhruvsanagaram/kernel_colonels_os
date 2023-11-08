@@ -31,13 +31,13 @@ int32_t populate_fops(){
     //ENUMERATE STDIN AND STDOUT FOR TERMINAL
     stdin_fops.open = terminal_open;
     stdin_fops.close = terminal_close;
-    stdin_fops.read = nul_read;
+    stdin_fops.read = terminal_read;
     stdin_fops.write = terminal_write;
 
 
     stdout_fops.open = terminal_open;
     stdout_fops.close = terminal_close;
-    stdout_fops.read = nul_read;
+    stdout_fops.read = terminal_read;
     stdout_fops.write = terminal_write;
 
     //ENUMERATE RTC_FOPS

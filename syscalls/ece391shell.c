@@ -7,11 +7,9 @@
 
 int main ()
 {
-	while(1);
     int32_t cnt, rval;
     uint8_t buf[BUFSIZE];
     ece391_fdputs (1, (uint8_t*)"Starting 391 Shell\n");
-
     while (1) {
         ece391_fdputs (1, (uint8_t*)"391OS> ");
 	if (-1 == (cnt = ece391_read (0, buf, BUFSIZE-1))) {

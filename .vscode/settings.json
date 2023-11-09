@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "int_handler.h": "c"
+        "int_handler.h": "c",
+        "lib.h": "c"
     }
 }

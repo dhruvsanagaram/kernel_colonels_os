@@ -3,6 +3,8 @@
 
 #include "lib.h"
 #include "types.h"
+
+#include "syscall-handler/syscall.h"
 ////////////// FS_TYPE EXT2 //////////////
 ///////////// USABLE MACROS //////////////////
 #define EXT2_DATA_BLOCK_SIZE 4096 //total block size is 4KB

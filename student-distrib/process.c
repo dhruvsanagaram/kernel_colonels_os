@@ -190,6 +190,7 @@ int32_t system_execute(const uint8_t* command) {
     dentry_t dentry;
     uint8_t buffer[40];
     printf("Checking exec...");
+    printf(command);
     if(!check_exec(&dentry, buffer, cmd)) return -FAILURE;
     
     //Get a free PID

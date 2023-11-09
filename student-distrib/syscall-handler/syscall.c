@@ -152,8 +152,8 @@ int32_t open (const uint8_t* filename) {
     if(pcb->fd_arr[openFd].fops->open(filename) == -FAILURE){
         return -FAILURE;
     }
-    //return openFd;
-    return SUCCESS;
+    return openFd;
+    // return SUCCESS;
 }
 
 int32_t close (int32_t fd) {

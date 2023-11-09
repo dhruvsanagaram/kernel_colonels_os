@@ -20,6 +20,6 @@ void setupIRET();
 
 //////HELPERS FOR EXECUTE (easier testing suite)///////
 void parse_command(const uint8_t* command, uint8_t* cmd, uint8_t *arg1);
-int32_t check_exec(dentry_t* dentry, uint8_t* buffer, uint8_t* cmd);
+int32_t check_exec(dentry_t *dentry, uint8_t *buffer, uint8_t *cmd);
 
 #endif

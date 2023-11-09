@@ -12,6 +12,7 @@ int enterKeyPressed = 0;
  * Side Effects: Copies keyboard buffer into terminal buffer
  */
 int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes){
+    // printf("Entering terminal read...");
     int32_t read_bytes;
     uint32_t flags;
     int i;

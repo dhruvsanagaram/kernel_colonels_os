@@ -419,7 +419,7 @@ void launch_tests(){
 	/////////////////// FILESYS TESTS /////////////////////
 	// TEST_OUTPUT("test_read_small_files", test_read_small_files());
 	// directory_test();
-	//readTextFile();
+	readTextFile();
 	// readTextFileLarge();
 	// readBin();
 
@@ -428,9 +428,6 @@ void launch_tests(){
 	/////////////////// CHECKPOINT 3 //////////////////////
 
 	///////////////// SYSCALL TESTS //////////////////////
-	//parseCommandTest();
-	//printf("%d",check_exec_test());
-	//system_execute((uint8_t*)("testprint"));
 
 	//kbtest(); //<-- we made this properly INT driven
 }

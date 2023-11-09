@@ -67,20 +67,24 @@ int32_t system_halt(uint8_t status){
     }
 
     //Restore parent data
-    pcb_t* parent_pcb = (pcb_t*)(0x800000 - 0x2000 * (pcb->parent_pid+1));  //retrieve parent_pcb start address
+    pcb_t* parent_pcb = (pcb_t*)(0x800000 - 0x2000 * (pcb->parent_pid));  //retrieve parent_pcb start address
     cur_PID = parent_pcb->pid;
     tss.ss0 = KERNEL_DS;
-    tss.esp0 = 0x800000 - 0x2000 * (parent_pcb->pid+1) - sizeof(int32_t);
+    tss.esp0 = 0x800000 - 0x2000 * (parent_pcb->pid);
 
     //Restore parent paging(& flush TLB)
     user_page_setup(cur_PID);
 
-    asm volatile(
-        "movl %%cr3, %%eax\n\t"             
-        "movl %%eax, %%cr3 "
-        : : : "eax", "memory", "cc"
+        asm volatile(
+            "mov %%cr3, %%eax \n\
+             mov %%eax, %%cr3 \n\
+            "
+            :
+            :
+            : "memory"
     );
-    
+
+
     //Close all relevant FDs
     process_slots[pcb->pid] = 0;                            //free up the slot for the recently running process
     for(i = 0; i < 8; i++){
@@ -100,11 +104,12 @@ int32_t system_halt(uint8_t status){
         "movl %0, %%esp\n\t"
         "movl %1, %%ebp\n\t"
         "movl %2, %%eax\n\t"
-        "jmp EXECUTE_RETURN "
+        "jmp EXECUTE_RETURN"
         : : "r"(esp), "r"(ebp), "r"(lower_status)
         : "eax", "memory", "cc"
     );
-    return status;
+
+    return SUCCESS;
 }
 
 

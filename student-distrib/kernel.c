@@ -173,7 +173,6 @@ void entry(unsigned long magic, unsigned long addr) {
     page_init();
     populate_fops(); //fop ops ready
     // user_page_setup(0);
-
     
 
 

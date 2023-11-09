@@ -57,14 +57,20 @@ int32_t system_halt(uint8_t status){
 
     cli();                                      //mask interrupts
 
+    printf("Start halt\n");
+
+
     pcb_t* pcb = getRunningPCB();               //get the running PCB
     if(pcb == NULL){
         printf("HALT: No running process ATM\n");  
         return -FAILURE;
     }
     if(pcb->pid == 0){
+        sti();
         return SUCCESS;
     }
+
+    printf("PCB found");
 
     //Restore parent data
     pcb_t* parent_pcb = (pcb_t*)(0x800000 - 0x2000 * (pcb->parent_pid));  //retrieve parent_pcb start address
@@ -299,6 +305,7 @@ int32_t system_execute(const uint8_t* command) {
         "EXECUTE_RETURN: " //interrupt ret
     );
 
+    printf("Bottom of execute\n");
     // sti();
     return SUCCESS;
 }

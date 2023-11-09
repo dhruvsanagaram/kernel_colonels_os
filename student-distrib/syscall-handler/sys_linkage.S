@@ -11,9 +11,9 @@
 
 
 handle_syscall:
+  pushl %ebp
   pushl   %esi
   pushl   %edi
-  pushl   %esp
 
   # arguments
   pushl   %edx         
@@ -37,10 +37,10 @@ dispatch_syscall:
   popl %ebx
   popl %ecx
   popl %edx
-  popl %esp
   popl %edi
   popl %esi
-
+  popl %ebp
+  
   iret
 
 sys_call_table:

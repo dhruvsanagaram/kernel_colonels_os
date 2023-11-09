@@ -111,12 +111,12 @@ void init(){
             idt[i].reserved4 = 0x0;
             idt[i].size = 0x1;
         }
-        
     }
 
     //set syscall entry to userspace callable (dpl set to 0x3)
     idt[SYSCALL_VEC].dpl = 0x3;
     idt[SYSCALL_VEC].present = 1;
+    idt[SYSCALL_VEC].reserved3 = 1;
 
     //populate idt with exceptions 
     SET_IDT_ENTRY(idt[0], divide_by_zero);

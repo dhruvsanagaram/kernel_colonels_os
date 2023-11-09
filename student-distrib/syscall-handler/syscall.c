@@ -79,6 +79,7 @@ int32_t halt (uint8_t status) {
  * Return Value: 
  *  Function:  */
 int32_t execute (const uint8_t* command) {
+    printf("Beginning execute\n");
     return system_execute(command);
 }
 

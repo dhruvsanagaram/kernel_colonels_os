@@ -91,6 +91,7 @@ int32_t system_halt(uint8_t status){
     cur_PID = pcb->parent_pid;
     tss.ss0 = KERNEL_DS;
     tss.esp0 = 0x800000 - 0x2000 * (pcb->parent_pid+1);
+    parent_pcb->tss_kernel_stack_ptr = tss.esp0;
 
     //Restore parent paging(& flush TLB)
     user_page_setup(cur_PID);
@@ -117,7 +118,7 @@ int32_t system_halt(uint8_t status){
     //Jump to execute return
     uint32_t esp, ebp;
     ebp = parent_pcb->process_esp;
-    esp = parent_pcb->process_esp; //set it to stack ptr in kernel space   
+    esp = parent_pcb->tss_kernel_stack_ptr; //set it to stack ptr in kernel space   
     
     
     sti();

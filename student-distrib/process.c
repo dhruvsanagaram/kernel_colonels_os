@@ -90,7 +90,7 @@ int32_t system_halt(uint8_t status){
     //cur_PID = parent_pcb->pid;
     cur_PID = pcb->parent_pid;
     tss.ss0 = KERNEL_DS;
-    tss.esp0 = 0x800000 - 0x2000 * (pcb->parent_pid+1);
+    tss.esp0 = 0x800000 - 0x2000 * (pcb->parent_pid) - sizeof(int32_t);
     parent_pcb->tss_kernel_stack_ptr = tss.esp0;
 
     //Restore parent paging(& flush TLB)
@@ -297,10 +297,14 @@ int32_t system_execute(const uint8_t* command) {
     // tss.esp0 = 0x800000 - 0x2000*(cur_PID + 1) - 4;
     // tss.esp0 = 0x800000 - 0x2000*cur_PID - sizeof(int32_t);
     tss.esp0 = 0x800000 - 0x2000*(cur_PID);
-    pcb->tss_kernel_stack_ptr = tss.esp0;
+    //pcb->tss_kernel_stack_ptr = tss.esp0;
     // setupIRET();
     //Push IRET Context to Stack
     // sti();
+    asm volatile(
+        "movl %%esp, %0;"
+        : "=r"(pcb->tss_kernel_stack_ptr)
+    );
 
     printf("\n%x",eip);
     printf("\n%x",esp);
@@ -326,7 +330,6 @@ int32_t system_execute(const uint8_t* command) {
     );
 
     printf("Bottom of execute\n");
-    while(1);
     // sti();
     return SUCCESS;
 }

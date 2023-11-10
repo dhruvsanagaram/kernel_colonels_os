@@ -16,7 +16,7 @@
 int32_t system_execute(const uint8_t* command);
 int32_t system_halt(uint8_t status);
 pcb_t* getRunningPCB(); //get the most recently running pcb from the stack
-void setupIRET();
+// void iret_helper();
 
 //////HELPERS FOR EXECUTE (easier testing suite)///////
 void parse_command(const uint8_t* command, uint8_t* cmd, uint8_t *arg1);

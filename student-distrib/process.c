@@ -53,7 +53,6 @@ pcb_t* getRunningPCB() {
 */
 int32_t system_halt(uint8_t status){
     int i;                                      //for iterating across every FDs that are running
-    int32_t lower_status = status & 0x00FF;     //mask lower bits of status for ret
 
     cli();                                      //mask interrupts
 
@@ -87,11 +86,11 @@ int32_t system_halt(uint8_t status){
     printf("PCB found");
 
     //Restore parent data
-    pcb_t* parent_pcb = (pcb_t*)(0x800000 - 0x2000 * (pcb->parent_pid));  //retrieve parent_pcb start address
+    pcb_t* parent_pcb = (pcb_t*)(0x800000 - 0x2000 * (pcb->parent_pid+1));  //retrieve parent_pcb start address
     //cur_PID = parent_pcb->pid;
     cur_PID = pcb->parent_pid;
     tss.ss0 = KERNEL_DS;
-    tss.esp0 = 0x800000 - 0x2000 * (pcb->parent_pid);
+    tss.esp0 = 0x800000 - 0x2000 * (pcb->parent_pid+1);
 
     //Restore parent paging(& flush TLB)
     user_page_setup(cur_PID);
@@ -117,17 +116,19 @@ int32_t system_halt(uint8_t status){
 
     //Jump to execute return
     uint32_t esp, ebp;
-    ebp = parent_pcb->process_ebp;
-    esp = parent_pcb->process_esp;
+    ebp = parent_pcb->process_esp;
+    esp = parent_pcb->process_esp; //set it to stack ptr in kernel space   
     
     
     sti();
     asm volatile(
         "movl %0, %%esp\n\t"
         "movl %1, %%ebp\n\t"
-        "movl %2, %%eax\n\t"
+        // "xorl %%eax, %%eax\n\t"
+        // "movb %2, %%al\n\t"
+        // "pushl %%eax\n\t"
         "jmp EXECUTE_RETURN"
-        : : "r"(esp), "r"(ebp), "r"(lower_status)
+        : : "r"(esp), "r"(ebp)
         : "eax", "memory", "cc"
     );
 
@@ -201,6 +202,7 @@ int32_t system_execute(const uint8_t* command) {
     uint8_t cmd[CMD_SIZE];
     uint8_t arg1[ARG_SIZE];
     parse_command(command, cmd, arg1);
+    int32_t ret;
 
     //Check if command exists and executable
     dentry_t dentry;
@@ -319,10 +321,11 @@ int32_t system_execute(const uint8_t* command) {
     
     asm volatile(
         "iret\n\t" //interrupt ret
-        "EXECUTE_RETURN: " //interrupt ret
+        "EXECUTE_RETURN: \n\t" //interrupt ret
     );
 
     printf("Bottom of execute\n");
+    while(1);
     // sti();
     return SUCCESS;
 }

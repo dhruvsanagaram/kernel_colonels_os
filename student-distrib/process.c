@@ -90,7 +90,7 @@ int32_t system_halt(uint8_t status){
     //cur_PID = parent_pcb->pid;
     cur_PID = pcb->parent_pid;
     tss.ss0 = KERNEL_DS;
-    tss.esp0 = 0x800000 - 0x2000 * (pcb->parent_pid) - sizeof(int32_t);
+    tss.esp0 = 0x800000 - 0x2000 * (pcb->parent_pid)  - sizeof(int32_t); //did -4 before
     parent_pcb->tss_kernel_stack_ptr = tss.esp0;
 
     //Restore parent paging(& flush TLB)
@@ -125,12 +125,12 @@ int32_t system_halt(uint8_t status){
     asm volatile(
         "movl %0, %%esp\n\t"
         "movl %1, %%ebp\n\t"
-        // "xorl %%eax, %%eax\n\t"
-        // "movb %2, %%al\n\t"
-        // "pushl %%eax\n\t"
-        "jmp EXECUTE_RETURN"
-        : : "r"(esp), "r"(ebp)
-        : "eax", "memory", "cc"
+        "xorl %%eax, %%eax\n\t"
+        "movb %2, %%al\n\t"
+        "leave \n\t"
+        "ret "
+        : : "r"(esp), "r"(ebp), "r"(status)
+        : "eax", "ebp", "ebp", "memory", "cc"
     );
 
     return SUCCESS;
@@ -325,11 +325,11 @@ int32_t system_execute(const uint8_t* command) {
 
     
     asm volatile(
-        "iret\n\t" //interrupt ret
-        "EXECUTE_RETURN: \n\t" //interrupt ret
+        "iret " //interrupt ret
     );
 
     printf("Bottom of execute\n");
+    // while(1);
     // sti();
     return SUCCESS;
 }

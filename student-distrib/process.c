@@ -61,6 +61,20 @@ int32_t system_halt(uint8_t status){
 
 
     pcb_t* pcb = getRunningPCB();               //get the running PCB
+
+
+    printf("%d\n",pcb->pid);
+
+    printf("%d\n",pcb->parent_pid);
+    
+    printf("%d\n",pcb->tss_kernel_stack_ptr);
+    
+    printf("%d\n",pcb->process_eip);
+    
+    printf("%d\n",pcb->process_esp);
+    
+    printf("%d\n",pcb->process_ebp);
+
     if(pcb == NULL){
         printf("HALT: No running process ATM\n");  
         return -FAILURE;
@@ -74,9 +88,10 @@ int32_t system_halt(uint8_t status){
 
     //Restore parent data
     pcb_t* parent_pcb = (pcb_t*)(0x800000 - 0x2000 * (pcb->parent_pid));  //retrieve parent_pcb start address
-    cur_PID = parent_pcb->pid;
+    //cur_PID = parent_pcb->pid;
+    cur_PID = pcb->parent_pid;
     tss.ss0 = KERNEL_DS;
-    tss.esp0 = 0x800000 - 0x2000 * (parent_pcb->pid);
+    tss.esp0 = 0x800000 - 0x2000 * (pcb->parent_pid);
 
     //Restore parent paging(& flush TLB)
     user_page_setup(cur_PID);
@@ -104,7 +119,8 @@ int32_t system_halt(uint8_t status){
     uint32_t esp, ebp;
     ebp = parent_pcb->process_ebp;
     esp = parent_pcb->process_esp;
-
+    
+    
     sti();
     asm volatile(
         "movl %0, %%esp\n\t"

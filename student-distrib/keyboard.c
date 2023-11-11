@@ -223,7 +223,12 @@ void keyb_main(void)
 
         // ENTER
         //0x1C = ENTER key pressed
-        if (userin == 0x1C)
+        if (userin == 0x1C && keyb_char_count == 0) {
+            send_eoi(1);
+            restore_flags(flags);
+            return;
+        }
+        if (userin == 0x1C && keyb_char_count != 0)
         {
             putc('\n');
             enterKeyPressed = 1;

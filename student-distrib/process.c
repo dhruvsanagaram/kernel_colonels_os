@@ -56,34 +56,34 @@ int32_t system_halt(uint8_t status){
 
     cli();                                      //mask interrupts
 
-    printf("Start halt\n");
+    // printf("Start halt\n");
 
 
     pcb_t* pcb = getRunningPCB();               //get the running PCB
 
 
-    printf("%d\n",pcb->pid);
+    // printf("%d\n",pcb->pid);
 
-    printf("%d\n",pcb->parent_pid);
+    // printf("%d\n",pcb->parent_pid);
     
-    printf("%d\n",pcb->tss_kernel_stack_ptr);
+    // printf("%d\n",pcb->tss_kernel_stack_ptr);
     
-    printf("%d\n",pcb->process_eip);
+    // printf("%d\n",pcb->process_eip);
     
-    printf("%d\n",pcb->process_esp);
+    // printf("%d\n",pcb->process_esp);
     
-    printf("%d\n",pcb->process_ebp);
+    // printf("%d\n",pcb->process_ebp);
 
     if(pcb == NULL){
-        printf("HALT: No running process ATM\n");  
+        // printf("HALT: No running process ATM\n");  
         return -FAILURE;
     }
     if(pcb->pid == 0){
-        sti();
+        system_execute((uint8_t*)("shell")); //relaunch the shell
         return SUCCESS;
     }
 
-    printf("PCB found");
+    // printf("PCB found");
 
     //Restore parent data
     pcb_t* parent_pcb = (pcb_t*)(0x800000 - 0x2000 * (pcb->parent_pid+1));  //retrieve parent_pcb start address
@@ -96,19 +96,19 @@ int32_t system_halt(uint8_t status){
     //Restore parent paging(& flush TLB)
     user_page_setup(cur_PID);
     asm volatile(
-            "mov %%cr3, %%eax \n\
-             mov %%eax, %%cr3 \n\
-            "
-            :
-            :
-            : "memory"
+        "movl %%cr3, %%eax \n\
+         movl %%eax, %%cr3 \n\
+        "
+        :
+        :
+        : "memory"
     );
 
 
     //Close all relevant FDs
     process_slots[pcb->pid] = 0;                            //free up the slot for the recently running process
     for(i = 0; i < 8; i++){
-        pcb->fd_arr[i].inode_num = -1;
+        pcb->fd_arr[i].inode_num = 0;
         pcb->fd_arr[i].flags = 0;                           //Process halted so flags are set to 0 to signify file out of use
         pcb->fd_arr[i].fpos = 0;
         pcb->fd_arr[i].fops = &nul_fops;                     //no more file ops for FDs >:)
@@ -116,24 +116,25 @@ int32_t system_halt(uint8_t status){
 
     //Jump to execute return
     uint32_t esp, ebp;
-    ebp = parent_pcb->process_ebp;
-    esp = parent_pcb->process_esp; //set it to stack ptr in kernel space   
+    uint16_t retStatus = (uint16_t) status;
+    ebp = pcb->process_ebp;
+    esp = pcb->process_esp; //set it to stack ptr in kernel space   
     
-    printf("ESP %x\n", esp);
-    printf("EBP %x\n", ebp);
+    // printf("ESP %x\n", esp);
+    // printf("EBP %x\n", ebp);
 
     sti();
     asm volatile(
         "movl %0, %%esp\n\t"
         "movl %1, %%ebp\n\t"
-        "xorl %%eax, %%eax\n\t"
-        "movb %2, %%al\n\t"
-        : : "r"(esp), "r"(ebp), "r"(status)
+        // "xorl %%eax, %%eax\n\t"
+        // "movw %2, %%ax\n\t"
+        : : "r"(esp), "r"(ebp)
         : "eax", "ebp", "ebp", "memory", "cc"
     );
 
     asm volatile(
-        "jmp RET_EXEC"
+        "jmp EXECUTE_RETURN"
     );
 
     return SUCCESS;
@@ -206,13 +207,13 @@ int32_t system_execute(const uint8_t* command) {
     uint8_t cmd[CMD_SIZE];
     uint8_t arg1[ARG_SIZE];
     parse_command(command, cmd, arg1);
-    int32_t ret;
+    // int32_t ret;
 
     //Check if command exists and executable
     dentry_t dentry;
     uint8_t buffer[40];
-    printf("Checking exec...");
-    printf(command);
+    // printf("Checking exec...");
+    // printf(command);
     if(!check_exec(&dentry, buffer, cmd)) return -FAILURE;
     
     //Get a free PID
@@ -232,8 +233,8 @@ int32_t system_execute(const uint8_t* command) {
     //Set up paging & flush TLB
     user_page_setup(cur_PID);
     asm volatile(
-            "mov %%cr3, %%eax \n\
-             mov %%eax, %%cr3 \n\
+            "movl %%cr3, %%eax \n\
+             movl %%eax, %%cr3 \n\
             "
             :
             :
@@ -243,7 +244,7 @@ int32_t system_execute(const uint8_t* command) {
     //Load file
     inode_t* prog_img_inode = &inode_start_ptr[dentry.inode_num];
     // uint8_t prog_img_buf[10000];
-    printf("Reading data...");
+    // printf("Reading data...");
     if (read_data(dentry.inode_num, 0, (uint8_t*)0x08048000, prog_img_inode->len) == -FAILURE) {
         return -FAILURE;
     }
@@ -251,9 +252,9 @@ int32_t system_execute(const uint8_t* command) {
     // if (read_data(dentry.inode_num, 0, (uint8_t*)0x08048000, prog_img_inode->len) == -FAILURE) {
     //     return -FAILURE;
     // }
-    printf("Copying to program image...");
+    // printf("Copying to program image...");
     // memcpy((uint8_t*)0x08048000,prog_img_buf,prog_img_inode->len);
-    printf("Image size: %d\n", prog_img_inode->len);
+    // printf("Image size: %d\n", prog_img_inode->len);
 
     // memcpy((uint8_t*)0x08048000,prog_img_buf,prog_img_inode->len);
 
@@ -291,11 +292,15 @@ int32_t system_execute(const uint8_t* command) {
     }
     eip = *((int*)(eip_buffer));
     //esp = USER_ADDR - EIGHT_KB*(cur_PID+1);                          // USER MEMORY ADDRESS + 4 MEGABYTE PAGE FOR START (and int32_t align)= 
+
     asm("\t movl %%esp, %0" : "=r"(esp));
     pcb->process_eip = eip;
-    pcb->process_esp = esp; //this should be the kernel esp
+    
     asm("\t movl %%ebp, %0" : "=r"(ebp)); //fill current program ebp
     pcb->process_ebp = ebp;
+    pcb->process_esp = esp; //this should be the kernel esp
+
+
     tss.ss0 = KERNEL_DS; // line right
     //tss.esp0 = 0x800000 - (0x2000*(cur_PID+1));   //might be wrong and we have to 4Byte align
     // tss.esp0 = 0x800000 - 0x2000*(cur_PID+1) - 4;
@@ -308,10 +313,12 @@ int32_t system_execute(const uint8_t* command) {
     //Push IRET Context to Stack
     // sti();
 
-    printf("\n%x",eip);
-    printf("\n%x",esp);
-    printf("\n%x",tss.esp0);
-    printf("\n");
+    // printf("\n%x",eip);
+    // printf("\n%x",esp);
+    // printf("\n%x",tss.esp0);
+    // printf("\n");
+
+
 
     sti();
 
@@ -322,15 +329,15 @@ int32_t system_execute(const uint8_t* command) {
         "pushl $0x0023\n\t" //push esp argument from pcb into stack
         "pushl %3\n\t" //push user context to stack
         : : "r"(USER_DS), "r"(USER_ESP), "r"(USER_CS), "r"(eip)
-        : "cc", "memory"
     );
+
+
     asm volatile(
-        "iret \n\t" //interrupt ret
-        "RET_EXEC: "
+        "iret\n\t"
+        "EXECUTE_RETURN: "
     );
 
-
-    printf("Bottom of execute\n");
+    // printf("Bottom of execute\n");
     // while(1);
     // sti();
     return SUCCESS;

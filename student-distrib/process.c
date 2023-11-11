@@ -6,7 +6,7 @@
 #define SUCCESS 0
 #define FAILURE 1
 
-int32_t process_slots[2] = {0, 0};
+int32_t process_slots[3] = {0, 0, 0};
 uint32_t cur_PID = -1;    //watcher for current pid being executed
 // uint32_t backlog_pid = -1; //watcher for the backlog (parent pid) for subsequently spawned processes
 
@@ -78,10 +78,8 @@ int32_t system_halt(uint8_t status){
         // printf("HALT: No running process ATM\n");  
         return -FAILURE;
     }
-    if(pcb->pid == 0){
-        system_execute((uint8_t*)("shell")); //relaunch the shell
-        return SUCCESS;
-    }
+
+
 
     // printf("PCB found");
 
@@ -112,6 +110,11 @@ int32_t system_halt(uint8_t status){
         pcb->fd_arr[i].flags = 0;                           //Process halted so flags are set to 0 to signify file out of use
         pcb->fd_arr[i].fpos = 0;
         pcb->fd_arr[i].fops = &nul_fops;                     //no more file ops for FDs >:)
+    }
+
+    if(process_slots[0] == 0 && process_slots[1] == 0 && process_slots[2] == 0){
+        system_execute((uint8_t*)("shell")); //relaunch the shell
+        return SUCCESS;
     }
 
     //Jump to execute return
@@ -218,7 +221,7 @@ int32_t system_execute(const uint8_t* command) {
     
     //Get a free PID
     int32_t check_PID = -1;
-    for (i = 0; i < 2; i++) {
+    for (i = 0; i < 3; i++) {
         if (process_slots[i] == 0){
             process_slots[i] = 1;
             check_PID = i;

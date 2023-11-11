@@ -4,6 +4,7 @@
 #include "../terminal.h"
 #include "../filesys.h"
 #include "../process.h"
+#include "../page.h"
 
 #define SUCCESS 0
 #define FAILURE 1
@@ -177,6 +178,38 @@ int32_t getargs (uint8_t* buf, int32_t nbytes) {
 }
 
 int32_t vidmap (uint8_t** screen_start) {
+    //first step, check if this screen start addr is valid.
+    //afterwards, set up virtual address paging
+    if(screen_start == NULL){
+        return -1;
+    }
+    uint32_t screen_addr = (uint32_t)(screen_start); //get the screen start address as 32bit signextend
+
+    //check if the address is within bounds of the maximum allocated page
+    if(screen_addr < USER_ADDR || screen_addr > (USER_ADDR+FOUR_MB)){
+        return -1;
+    }
+    //set up the virtual address at 136 mb which is for vidmap
+    page_directory[VIDMAP_IDX].ps_bit = 0;
+    page_directory[VIDMAP_IDX].present = 1;
+    page_directory[VIDMAP_IDX].user = 1;
+    page_directory[VIDMAP_IDX].base_addr = ((int)page_video_map)/FOUR_KB; //align the 20bits to 4KB
+
+    //set the pages in the page table for the video map
+    page_video_map[0].present = 1;
+    page_video_map[0].user = 1; //set to user mode
+    page_video_map[0].base_addr = VIDEO_ADDR/FOUR_KB;
+
+    //flush tlb
+    asm volatile(
+        "movl %%cr3, %%eax \n\
+         movl %%eax, %%cr3 \n\
+        "
+        : : : "memory"
+    );
+
+    //set the screen start to point to the base of the 4MB page assigned to vidmem at 126MB
+    *screen_start = (uint8_t*)(VIDEO_ADDR_VIR); //0x8800000
     return SUCCESS;
 }
 

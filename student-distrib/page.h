@@ -7,13 +7,16 @@
 
 //Define the page size
 #define FOUR_KB 4096 //2^12 bytes
+#define FOUR_MB 0x400000
 #define EIGHT_KB 0x2000
 #define KERNEL_ADDR 0x400000 //start of kmem in physical media
 #define USER_ADDR 0x8000000 //start of virtual user mem (128MB)
 #define VIDEO_ADDR 0xB8000 //start of video memory
+#define VIDEO_ADDR_VIR 0x8800000 //136MB
 #define PAGE_SIZE 1024 //number of pages in dir
 #define KERNEL_IDX 1
 #define USER_IDX 32
+#define VIDMAP_IDX 34 //page directory index for vidmap
 
 
 extern void page_init();

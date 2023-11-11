@@ -283,6 +283,7 @@ int32_t system_execute(const uint8_t* command) {
         pcb->fd_arr[i].fpos = 0;
         pcb->fd_arr[i].flags = 0;
     }
+    pcb->arg1 = arg1;
 
     //Context switch
     uint8_t eip_buffer[4];

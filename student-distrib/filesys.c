@@ -178,19 +178,14 @@ int32_t file_read(int32_t fd, void *buf, int32_t nbytes){
   if(fd < 0 || nbytes < 0 || buf == NULL){
     return -FAILURE;
   }
-  dentry_t the_dentry;
-  if (read_dentry_by_index(fd, &the_dentry) == -FAILURE){
-    return -FAILURE;
-  }
+  pcb_t* cur_pcb = getRunningPCB();
   // printf("FD index: %d\n", fd);
-  // printf("dentry inode_num: %d\n", the_dentry.inode_num);
+  // printf("dentry inode_num: %d\n", cur_pcb->fd_arr[fd].inode_num);
   // printf("the original: %d\n", boot_base_addr->dentries[fd].inode_num);
-
-  inode_t* inode = &inode_start_ptr[the_dentry.inode_num];
+  inode_t* inode = &inode_start_ptr[cur_pcb->fd_arr[fd].inode_num];
   if(file_pos_in_dir >= inode->len){
     return 0; //EOF has been hit
   }
-
   //Calculate the number of bytes to read
   bytes_to_read = nbytes;
   if(file_pos_in_dir + nbytes > inode->len){
@@ -198,9 +193,9 @@ int32_t file_read(int32_t fd, void *buf, int32_t nbytes){
   }
 
   //Pull data from file
-  // printf("inode_number: %d\n", the_dentry.inode_num);
+  // printf("inode_number: %d\n", cur_pcb->fd_arr[fd].inode_num);
   // printf("file position: %d\n", file_pos_in_dir);
-  bytes_actually_read = read_data(the_dentry.inode_num, file_pos_in_dir, buf, bytes_to_read);
+  bytes_actually_read = read_data(cur_pcb->fd_arr[fd].inode_num, file_pos_in_dir, buf, bytes_to_read);
   if(bytes_actually_read < 0){
     return -FAILURE;
   }

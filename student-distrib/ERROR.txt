@@ -1,2 +1,12 @@
-make: Warning: File `Makefile.dep' has modification time 5e+02 s in the future
+make: Warning: File `Makefile.dep' has modification time 2.1e+03 s in the future
+filesys.c: In function ‘file_read’:
+filesys.c:181: warning: implicit declaration of function ‘getRunningPCB’
+filesys.c:181: warning: initialization makes pointer from integer without a cast
+filesys.c:471:2: warning: no newline at end of file
+process.c: In function ‘system_halt’:
+process.c:119: warning: unused variable ‘retStatus’
+process.c:89: warning: unused variable ‘parent_pcb’
+syscall-handler/syscall.c: In function ‘getargs’:
+syscall-handler/syscall.c:174: warning: pointer targets in passing argument 1 of ‘strncpy’ differ in signedness
+syscall-handler/syscall.c:174: warning: pointer targets in passing argument 2 of ‘strncpy’ differ in signedness
 make: warning:  Clock skew detected.  Your build may be incomplete.

@@ -52,6 +52,7 @@ typedef struct {
   uint32_t process_eip;
   uint32_t process_esp;
   uint32_t process_ebp;
+  uint8_t* arg1;
 } pcb_t;
 
 

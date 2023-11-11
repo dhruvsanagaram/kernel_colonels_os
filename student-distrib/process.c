@@ -90,13 +90,12 @@ int32_t system_halt(uint8_t status){
     //cur_PID = parent_pcb->pid;
     cur_PID = pcb->parent_pid;
     tss.ss0 = KERNEL_DS;
-    tss.esp0 = 0x800000 - 0x2000 * (pcb->parent_pid)  - sizeof(int32_t); //did -4 before
-    parent_pcb->tss_kernel_stack_ptr = tss.esp0;
+    tss.esp0 = 0x800000 - 0x2000 * (pcb->parent_pid); //did -4 before
+    // parent_pcb->tss_kernel_stack_ptr = tss.esp0;
 
     //Restore parent paging(& flush TLB)
     user_page_setup(cur_PID);
-
-        asm volatile(
+    asm volatile(
             "mov %%cr3, %%eax \n\
              mov %%eax, %%cr3 \n\
             "
@@ -117,20 +116,24 @@ int32_t system_halt(uint8_t status){
 
     //Jump to execute return
     uint32_t esp, ebp;
-    ebp = parent_pcb->process_esp;
-    esp = parent_pcb->tss_kernel_stack_ptr; //set it to stack ptr in kernel space   
+    ebp = parent_pcb->process_ebp;
+    esp = parent_pcb->process_esp; //set it to stack ptr in kernel space   
     
-    
+    printf("ESP %x\n", esp);
+    printf("EBP %x\n", ebp);
+
     sti();
     asm volatile(
         "movl %0, %%esp\n\t"
         "movl %1, %%ebp\n\t"
         "xorl %%eax, %%eax\n\t"
         "movb %2, %%al\n\t"
-        "leave \n\t"
-        "ret "
         : : "r"(esp), "r"(ebp), "r"(status)
         : "eax", "ebp", "ebp", "memory", "cc"
+    );
+
+    asm volatile(
+        "jmp RET_EXEC"
     );
 
     return SUCCESS;
@@ -282,29 +285,28 @@ int32_t system_execute(const uint8_t* command) {
 
     //Context switch
     uint8_t eip_buffer[4];
-    uint32_t eip, esp;
+    uint32_t eip, esp, ebp;
     if(read_data(dentry.inode_num, 24, eip_buffer, sizeof(int32_t)) == -FAILURE){
         return -FAILURE;
     }
     eip = *((int*)(eip_buffer));
     //esp = USER_ADDR - EIGHT_KB*(cur_PID+1);                          // USER MEMORY ADDRESS + 4 MEGABYTE PAGE FOR START (and int32_t align)= 
-    esp = 0x8400000 - sizeof(int32_t);
+    asm("\t movl %%esp, %0" : "=r"(esp));
     pcb->process_eip = eip;
-    pcb->process_esp = esp; 
+    pcb->process_esp = esp; //this should be the kernel esp
+    asm("\t movl %%ebp, %0" : "=r"(ebp)); //fill current program ebp
+    pcb->process_ebp = ebp;
     tss.ss0 = KERNEL_DS; // line right
     //tss.esp0 = 0x800000 - (0x2000*(cur_PID+1));   //might be wrong and we have to 4Byte align
     // tss.esp0 = 0x800000 - 0x2000*(cur_PID+1) - 4;
     // tss.esp0 = 0x800000 - 0x2000*(cur_PID + 1) - 4;
     // tss.esp0 = 0x800000 - 0x2000*cur_PID - sizeof(int32_t);
     tss.esp0 = 0x800000 - 0x2000*(cur_PID);
-    //pcb->tss_kernel_stack_ptr = tss.esp0;
+    // pcb->tss_kernel_stack_ptr = tss.esp0;
+
     // setupIRET();
     //Push IRET Context to Stack
     // sti();
-    asm volatile(
-        "movl %%esp, %0;"
-        : "=r"(pcb->tss_kernel_stack_ptr)
-    );
 
     printf("\n%x",eip);
     printf("\n%x",esp);
@@ -319,14 +321,14 @@ int32_t system_execute(const uint8_t* command) {
         "pushfl\n\t" //push flags to the stack
         "pushl $0x0023\n\t" //push esp argument from pcb into stack
         "pushl %3\n\t" //push user context to stack
-        : : "r"(USER_DS), "r"(esp), "r"(USER_CS), "r"(eip)
+        : : "r"(USER_DS), "r"(USER_ESP), "r"(USER_CS), "r"(eip)
         : "cc", "memory"
     );
-
-    
     asm volatile(
-        "iret " //interrupt ret
+        "iret \n\t" //interrupt ret
+        "RET_EXEC: "
     );
+
 
     printf("Bottom of execute\n");
     // while(1);

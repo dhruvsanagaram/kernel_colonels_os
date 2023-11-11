@@ -27,6 +27,7 @@ do_one_file (const char* s, const char* fname)
 	last += cnt;
 	line_start = 0;
 	while (1) {
+		ece391_fdputs (1, (uint8_t*)"Check\n");
 	    line_end = line_start;
 	    while (line_end < last && '\n' != data[line_end])
 		line_end++;
@@ -89,6 +90,7 @@ int main ()
 	if ('.' == buf[0]) /* a directory... */
 	    continue;
 	buf[cnt] = '\0';
+	
 	if (0 != do_one_file ((char*)search, (char*)buf))
 	    return 3;
     }

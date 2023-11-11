@@ -172,6 +172,7 @@ int32_t getargs (uint8_t* buf, int32_t nbytes) {
     pcb_t* pcb = getRunningPCB();
     if(pcb->arg1[0] == '\0') return -FAILURE;
     strncpy(buf, pcb->arg1, nbytes);
+
     return SUCCESS;
 }
 

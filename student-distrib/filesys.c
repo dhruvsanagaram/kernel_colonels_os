@@ -10,7 +10,7 @@ superblock_t *boot_base_addr;
 inode_t* inode_start_ptr;
 dentry_t* dentry_start_ptr;
 uint32_t* data_block_ptr;
-uint32_t file_pos_in_dir;
+// uint32_t file_pos_in_dir;
 /* 
   * init_fs
   * inputs: unsigned int filesys_addr -- address of base of filesystem
@@ -55,7 +55,6 @@ int32_t directory_open(const uint8_t *filename){
   if(read_dentry_by_name(filename, &the_dentry) == -FAILURE){
     return -FAILURE; //file does not exist
   }
-  file_pos_in_dir = 0;
   return SUCCESS; //file found;
 }
 
@@ -87,14 +86,21 @@ int32_t directory_read(int32_t fd, void *buf, int32_t nbytes){
   dentry_t the_dentry;
   int32_t bytes_to_copy;
   int len_filename;
+  pcb_t* cur_pcb = getRunningPCB(); //check the current process
+  int32_t file_pos_in_dir = cur_pcb->fd_arr[fd].fpos; //check file position
+  // printf("Dir read called\n");
+  //Check the validity of dir args
   if(buf == NULL || nbytes <= 0){
     return -FAILURE;
   }
   if(read_dentry_by_index(file_pos_in_dir, &the_dentry) == -FAILURE){
-    // file_pos_in_dir = 0;
     return 0; //the directory couldn't be read so no bytes were read because the dentry wasnt found/read
   }
+
   len_filename = strlen((int8_t*)the_dentry.filename);
+
+  //Truncation of filename so that we can work with stuff like verylargetextwithverylargename
+
   if(len_filename > FILENAME_LEN){
     len_filename = FILENAME_LEN;
   }
@@ -105,9 +111,12 @@ int32_t directory_read(int32_t fd, void *buf, int32_t nbytes){
   //Null terminate the string if space is avail
   if(bytes_to_copy < nbytes){
     ((char*)buf)[bytes_to_copy] = '\0';
-  }
+  } 
 
   file_pos_in_dir++;
+  cur_pcb->fd_arr[fd].fpos = file_pos_in_dir; //update fileread position
+
+
   return bytes_to_copy;
 }
 
@@ -175,31 +184,33 @@ int32_t file_read(int32_t fd, void *buf, int32_t nbytes){
   //do something with read_data for file
   int32_t bytes_to_read;
   int32_t bytes_actually_read;
+
+  //check if the args are valid
   if(fd < 0 || nbytes < 0 || buf == NULL){
     return -FAILURE;
   }
+  //1. get the pcb running currently and read the data for its inode
   pcb_t* cur_pcb = getRunningPCB();
   // printf("FD index: %d\n", fd);
   // printf("dentry inode_num: %d\n", cur_pcb->fd_arr[fd].inode_num);
   // printf("the original: %d\n", boot_base_addr->dentries[fd].inode_num);
   inode_t* inode = &inode_start_ptr[cur_pcb->fd_arr[fd].inode_num];
-  if(file_pos_in_dir >= inode->len){
+  if(cur_pcb->fd_arr[fd].fpos >= inode->len){
     return 0; //EOF has been hit
   }
   //Calculate the number of bytes to read
   bytes_to_read = nbytes;
-  if(file_pos_in_dir + nbytes > inode->len){
-    bytes_to_read = inode->len - file_pos_in_dir; //Adjust bytes that will be read if file size exceeded
+  if(cur_pcb->fd_arr[fd].fpos + nbytes > inode->len){
+    bytes_to_read = inode->len - cur_pcb->fd_arr[fd].fpos; //Adjust bytes that will be read if file size exceeded
   }
-
   //Pull data from file
   // printf("inode_number: %d\n", cur_pcb->fd_arr[fd].inode_num);
   // printf("file position: %d\n", file_pos_in_dir);
-  bytes_actually_read = read_data(cur_pcb->fd_arr[fd].inode_num, file_pos_in_dir, buf, bytes_to_read);
+  bytes_actually_read = read_data(cur_pcb->fd_arr[fd].inode_num, cur_pcb->fd_arr[fd].fpos, buf, bytes_to_read);
   if(bytes_actually_read < 0){
     return -FAILURE;
   }
-  file_pos_in_dir += bytes_actually_read;
+  cur_pcb->fd_arr[fd].fpos += bytes_actually_read;
   return bytes_actually_read;
 }
 

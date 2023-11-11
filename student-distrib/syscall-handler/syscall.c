@@ -214,11 +214,11 @@ int32_t vidmap (uint8_t** screen_start) {
 }
 
 int32_t set_handler (int32_t signum, void* handler_address) {
-    return SUCCESS;
+    return -FAILURE;
 }
 
 int32_t sigreturn (void) {
-    return SUCCESS;
+    return -FAILURE;
 }
 
 //////////// NULL SYSCALLS (all return -1 as they are null) ////////////

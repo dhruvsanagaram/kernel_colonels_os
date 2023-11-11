@@ -130,10 +130,10 @@ int32_t system_halt(uint8_t status){
     asm volatile(
         "movl %0, %%esp\n\t"
         "movl %1, %%ebp\n\t"
-        // "xorl %%eax, %%eax\n\t"
-        // "movw %2, %%ax\n\t"
-        : : "r"(esp), "r"(ebp)
-        : "eax", "ebp", "ebp", "memory", "cc"
+        "xorl %%eax, %%eax\n\t"
+        "movw %2, %%ax\n\t"
+        : : "r"(esp), "r"(ebp), "r"(retStatus)
+        : "ebp", "ebp", "memory", "cc"
     );
 
     asm volatile(

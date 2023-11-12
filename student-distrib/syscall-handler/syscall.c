@@ -72,7 +72,7 @@ int32_t populate_fops(){
  * Return Value: 
  *  Function:  */
 int32_t halt (uint8_t status) {
-    return system_halt(status);
+    return system_halt((uint16_t)status);
 }
 
 /* int32_t execute;
@@ -93,6 +93,15 @@ int32_t read (int32_t fd, void* buf, int32_t nbytes) {
     //Return bytes read
     //If initial file position is at or beyond end of file, return 0
     //Get function for file type
+    if (fd<0 || fd > 7) {
+        return -FAILURE;
+    }
+    if (fd == 1) {
+        return -FAILURE;
+    }
+    if (getRunningPCB()->fd_arr[fd].flags == 0) {
+        return -FAILURE;
+    }
     return (getRunningPCB()->fd_arr[fd].fops->read)(fd,buf,nbytes); //Handle error checking within each individual function type
 
 }
@@ -102,6 +111,10 @@ int32_t read (int32_t fd, void* buf, int32_t nbytes) {
  * Return Value: 
  *  Function:  */
 int32_t write (int32_t fd, const void* buf, int32_t nbytes) {
+    if (fd<1 || fd > 7) {
+        return -FAILURE;
+    }
+
     return (getRunningPCB()->fd_arr[fd].fops->write)(fd,buf,nbytes);
 }
 
@@ -159,6 +172,9 @@ int32_t open (const uint8_t* filename) {
 
 int32_t close (int32_t fd) {
     pcb_t* pcb = getRunningPCB();
+    if (fd<2 || fd > 7) {
+        return -FAILURE;
+    }
     if(!pcb->fd_arr[fd].flags || fd == 0 || fd == 1 || fd >= 8)
         return -FAILURE;
     pcb->fd_arr[fd].flags = 0;

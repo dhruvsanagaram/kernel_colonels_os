@@ -181,7 +181,7 @@ void init(){
  *  Function: Divide by zero exception */
 void divide_by_zero(){
     printf("Divide by Zero");
-    while(1);
+    system_halt(256);
 }
 
 /* void reserved_fault();
@@ -190,7 +190,7 @@ void divide_by_zero(){
  *  Function: Debug error*/
 void reserved_fault(){
     printf("Debug Error");
-    while(1);
+    system_halt(256);
 }
 
 /* void non_maskable_interrupt();
@@ -199,7 +199,7 @@ void reserved_fault(){
  *  Function: Non-maskable-interrupt */
 void non_maskable_interrupt(){
     printf("Non-Maskable Interrupt");
-    while(1);
+    system_halt(256);
 }
 
 /* void breakpoint();
@@ -208,7 +208,7 @@ void non_maskable_interrupt(){
  *  Function: Breakpoint */
 void breakpoint(){
     printf("Breakpoint");
-    // while(1);
+    system_halt(256);
 }
 
 /* void overflow();
@@ -217,7 +217,7 @@ void breakpoint(){
  *  Function: Overflow Trap */
 void overflow(){
     printf("Overflow Trap");
-    while(1);
+    system_halt(256);
 }
 
 /* void bounds_range();
@@ -226,7 +226,7 @@ void overflow(){
  *  Function: Bound Range Exceeded */
 void bounds_range(){
     printf("Bound Range Exceeded");
-    while(1);
+    system_halt(256);
 }
 
 /* void undefined_opcode();
@@ -235,7 +235,7 @@ void bounds_range(){
  *  Function: Undefined opcode */
 void undefined_opcode(){
     printf("Undefined opcode encountered");
-    while(1);
+    system_halt(256);
 }
 
 /* void device_unavailable();
@@ -244,7 +244,7 @@ void undefined_opcode(){
  *  Function: Device is not available */
 void device_unavailable(){
     printf("Device is not available");
-    while(1);
+    system_halt(256);
 }
 
 /* void double_fault();
@@ -253,7 +253,7 @@ void device_unavailable(){
  *  Function: double fault encountered */
 void double_fault(){
     printf("double fault encountered");
-    while(1);
+    system_halt(256);
 }
 
 /* void segment_overrun();
@@ -262,7 +262,7 @@ void double_fault(){
  *  Function: segment overrun fault */
 void segment_overrun(){
     printf("segment overrun fault");
-    while(1);
+    system_halt(256);
 }
 
 /* void invalid_tss();
@@ -271,7 +271,7 @@ void segment_overrun(){
  *  Function: Invalid TSS Fault */
 void invalid_tss(){
     printf("Invalid TSS Fault");
-    while(1);
+    system_halt(256);
 }
 
 /* void segment_not_present();
@@ -280,7 +280,7 @@ void invalid_tss(){
  *  Function: segment not present */
 void segment_not_present(){
     printf("Segment not present");
-    while(1);
+    system_halt(256);
 }
 
 /* void stack_segfault();
@@ -289,7 +289,7 @@ void segment_not_present(){
  *  Function: segmentation fault */
 void stack_segfault(){
     printf("segmentation fault");
-    while(1);
+    system_halt(256);
 }
 
 /* void gen_protection();
@@ -298,7 +298,7 @@ void stack_segfault(){
  *  Function: general protection compromised */
 void gen_protection(){
     printf("general protection compromised");
-    while(1);
+    system_halt(256);
 }
 
 /* void page_fault();
@@ -313,7 +313,7 @@ void page_fault(){
     );
     printf("%x", err_code);
     printf("page fault");
-    while(1);
+    system_halt(256);
 }
 
 /* void intel_reserved();
@@ -322,7 +322,7 @@ void page_fault(){
  *  Function: reserved by intel */
 void intel_reserved(){
     printf("reserved by intel");
-    while(1);
+    system_halt(256);
 }
 
 /* void floating_point_x87
@@ -331,7 +331,7 @@ void intel_reserved(){
  *  Function: x87 floating point exception */
 void floating_point_x87(){
     printf("x87 floating point exception");
-    while(1);
+    system_halt(256);
 }
 
 /* void alignment_check();
@@ -340,7 +340,7 @@ void floating_point_x87(){
  *  Function: Alignment Check encountered */
 void alignment_check(){
     printf("Alignment Check encountered");
-    while(1);
+    system_halt(256);
 }
 
 /* void machine_check();
@@ -349,7 +349,7 @@ void alignment_check(){
  *  Function: Machine check encountered */
 void machine_check(){
     printf("Machine check encountered");
-    while(1);
+    system_halt(256);
 }
 
 /* void floating_point_SIMD();
@@ -358,7 +358,7 @@ void machine_check(){
  *  Function: SIMD floating point exception */
 void floating_point_SIMD(){
     printf("SIMD floating point exception");
-    while(1);
+    system_halt(256);
 }
 
 /* void onwards_20();
@@ -367,7 +367,7 @@ void floating_point_SIMD(){
  *  Function: reserved by intel */
 void onwards_20(){
     printf("reserved by intel");
-    while(1);
+    system_halt(256);
 }
 
 /* void syscall_handler();

@@ -51,7 +51,7 @@ pcb_t* getRunningPCB() {
 * output: int32_t
 * side effects: Restore parent data & paging & clear relevant FDs
 */
-int32_t system_halt(uint8_t status){
+int32_t system_halt(uint16_t status){
     int i;                                      //for iterating across every FDs that are running
 
     cli();                                      //mask interrupts

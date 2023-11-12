@@ -1,16 +1,4 @@
 Makefile:39: Makefile.dep: No such file or directory
-make: Warning: File `page.c' has modification time 28 s in the future
-make: Warning: File `Makefile.dep' has modification time 85 s in the future
-filesys.c: In function ‘directory_read’:
-filesys.c:89: warning: implicit declaration of function ‘getRunningPCB’
-filesys.c:89: warning: initialization makes pointer from integer without a cast
-filesys.c: In function ‘file_read’:
-filesys.c:193: warning: initialization makes pointer from integer without a cast
-filesys.c:482:2: warning: no newline at end of file
-process.c: In function ‘system_halt’:
-process.c:119: warning: unused variable ‘retStatus’
-process.c:89: warning: unused variable ‘parent_pcb’
-syscall-handler/syscall.c: In function ‘getargs’:
-syscall-handler/syscall.c:175: warning: pointer targets in passing argument 1 of ‘strncpy’ differ in signedness
-syscall-handler/syscall.c:175: warning: pointer targets in passing argument 2 of ‘strncpy’ differ in signedness
+make: Warning: File `syscall-handler/syscall.c' has modification time 35 s in the future
+make: Warning: File `Makefile.dep' has modification time 48 s in the future
 make: warning:  Clock skew detected.  Your build may be incomplete.

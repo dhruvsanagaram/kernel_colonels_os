@@ -1,3 +1,48 @@
+<================================================================>
+<======================>   CHECKPOINT 4   <======================>
+<================================================================>
+Assignment:
+    MP3
+Checkpoint:
+    CP4
+Authors:
+    sagnik3, dhruvs7, arasha3, rct4
+
+
+<================================================================>
+                              BUG 2
+<================================================================>
+problem: Syserror tests did not pass. Close was not returning failure on
+already closed files.
+
+fix: The first issue was that we were not checking for valid fd values
+in our syscalls. Additionally, we were not checking that the file was closed
+by making sure that flag was 1 before we closed the file.
+
+resolved by: ryan, dhruv, sagnik, arash
+
+commmit (if any):
+
+Time: 2 hrs
+
+<================================================================>
+                              BUG 1
+<================================================================>
+problem: When running cat and grep, the write system calls were printing 
+garbage instead of the correct information. 
+
+fix: We realized with cat that our file_read had to be incorrect since 
+ls worked and we knew ls used directory_read. Therefore, we examined our
+file read and realized that the inode start pointer was determined by the 
+fd, not the inode for the fd of the current process. We made this change 
+for both file_read and directory_read and it seemed to work.
+
+resolved by: ryan, dhruv, sagnik, arash
+
+commmit (if any):
+
+Time: 3 hrs
+
 
 <================================================================>
 <======================>   CHECKPOINT 3   <======================>
@@ -8,6 +53,72 @@ Checkpoint:
     CP3
 Authors:
     sagnik3, dhruvs7, arasha3, rct4
+
+<================================================================>
+                              BUG 8
+<================================================================>
+problem: The calculation of esp was invalid, and was not retrieving the value 
+of esp off the kernel stack. 
+
+fix: We were not distinguishing the difference between the stack pointer in the 
+kernel space and the stack pointer in the user space. We were saving the pcb->process_esp 
+to USER_ESP instead of the value of esp retrieved from the kernel stack through assembly
+linkage. We added assembly linkage to retrieve the value of esp in the kernel stack.
+
+resolved by: ryan, dhruv, sagnik, arash
+
+commmit (if any):
+
+Time: 5 hrs
+
+<================================================================>
+                              BUG 7
+<================================================================>
+problem: When halt was finished, we were returning control to the user,
+as we were able to type into the buffer after halt was finished.
+
+fix: We initially thought that it was an issue with the jmp RETURN_EXECUTE
+in halt, but after checking the slides, we realized that the esp and ebp that we
+were retrieving from the pcb was that of the parent_pcb, not the current pcb.
+This is problematic because the esp points to the return address of the program
+that called the current process's program. Therefore, the esp and ebp
+were being set to shell's(pid = 0) esp instead of ls's(pid = 1) esp, hence returning
+control to the user space instead of the kernel space where shell was executing.
+
+resolved by: ryan, dhruv, sagnik, arash
+
+commmit (if any):
+
+Time: 5 hrs
+
+<================================================================>
+                              BUG 6
+<================================================================>
+problem: We weren't entering the user program(shell) when we iret from system_execute
+fix: The order in which we pushed the arguments to the kernel stack was invalid so iret
+was popping those values into the wrong segment registers to the eip was incorrect.
+
+fix: We checked the slides to see the order in which the arguments were pushed to the kernel stack.
+
+resolved by: ryan, dhruv, sagnik, arash
+
+commmit (if any):
+
+Time: 5 hrs
+
+<================================================================>
+                              BUG 5
+<================================================================>
+problem: When we tried to load the user program into memory, we were loading the incorrect instructions.
+
+fix: Instead of copying the program image into a buffer and copying the buffer into the physical memory,
+we directly copied the program image from the dentry into physical memory directly using read_data
+
+resolved by: ryan, dhruv, sagnik, arash
+
+commmit (if any):
+
+Time: 1 hr
 
 <================================================================>
                               BUG 4

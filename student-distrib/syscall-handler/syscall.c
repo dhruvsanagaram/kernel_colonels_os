@@ -69,7 +69,7 @@ int32_t populate_fops(){
 
 /* int32_t halt;
  * Inputs: uint_8 status
- * Return Value: 
+ * Return Value: int32_t
  *  Function:  */
 int32_t halt (uint8_t status) {
     return system_halt((uint16_t)status);
@@ -77,10 +77,9 @@ int32_t halt (uint8_t status) {
 
 /* int32_t execute;
  * Inputs: const uint_8* command
- * Return Value: 
+ * Return Value: int32_t
  *  Function:  */
 int32_t execute (const uint8_t* command) {
-    // printf("Beginning execute\n");
     return system_execute(command);
 }
 
@@ -89,10 +88,6 @@ int32_t execute (const uint8_t* command) {
  * Return Value: 
  *  Function:  */
 int32_t read (int32_t fd, void* buf, int32_t nbytes) {
-
-    //Return bytes read
-    //If initial file position is at or beyond end of file, return 0
-    //Get function for file type
     if (fd<0 || fd > 7) {
         return -FAILURE;
     }
@@ -111,13 +106,17 @@ int32_t read (int32_t fd, void* buf, int32_t nbytes) {
  * Return Value: 
  *  Function:  */
 int32_t write (int32_t fd, const void* buf, int32_t nbytes) {
-    if (fd<1 || fd > 7) {
+    if (fd<1 || fd > 7) {   //boundaries for fd numbers 
         return -FAILURE;
     }
 
     return (getRunningPCB()->fd_arr[fd].fops->write)(fd,buf,nbytes);
 }
 
+/* int32_t open;
+ * Inputs: const uint8_t* filename
+ * Return Value: int32_t
+ *  Function:  */
 int32_t open (const uint8_t* filename) {
     pcb_t* pcb = getRunningPCB();
     dentry_t dentry;
@@ -167,9 +166,12 @@ int32_t open (const uint8_t* filename) {
         return -FAILURE;
     }
     return openFd;
-    // return SUCCESS;
 }
 
+/* int32_t close
+ * Inputs: int32_t fd
+ * Return Value: int32_t
+ *  Function:  */
 int32_t close (int32_t fd) {
     pcb_t* pcb = getRunningPCB();
     if (fd<2 || fd > 7) {
@@ -185,17 +187,23 @@ int32_t close (int32_t fd) {
     return SUCCESS;
 }
 
+/* int32_t getargs
+ * Inputs: uint8_t* buf, int32_t nbytes
+ * Return Value: int32_t
+ *  Function:  */
 int32_t getargs (uint8_t* buf, int32_t nbytes) {
     pcb_t* pcb = getRunningPCB();
     if(pcb->arg1[0] == '\0') return -FAILURE;
-    strncpy(buf, pcb->arg1, nbytes);
+    strncpy((int8_t*)buf, (int8_t*)pcb->arg1, nbytes);
 
     return SUCCESS;
 }
 
+/* int32_t vidmap
+ * Inputs: uint8_t** screen_start
+ * Return Value: int32_t
+ *  Function:  */
 int32_t vidmap (uint8_t** screen_start) {
-    //first step, check if this screen start addr is valid.
-    //afterwards, set up virtual address paging
     if(screen_start == NULL){
         return -1;
     }
@@ -205,6 +213,7 @@ int32_t vidmap (uint8_t** screen_start) {
     if(screen_addr < USER_ADDR || screen_addr > (USER_ADDR+FOUR_MB)){
         return -1;
     }
+
     //set up the virtual address at 136 mb which is for vidmap
     page_directory[VIDMAP_IDX].ps_bit = 0;
     page_directory[VIDMAP_IDX].present = 1;
@@ -225,7 +234,7 @@ int32_t vidmap (uint8_t** screen_start) {
     );
 
     //set the screen start to point to the base of the 4MB page assigned to vidmem at 126MB
-    *screen_start = (uint8_t*)(VIDEO_ADDR_VIR); //0x8800000
+    *screen_start = (uint8_t*)(VIDEO_ADDR_VIR);
     return SUCCESS;
 }
 

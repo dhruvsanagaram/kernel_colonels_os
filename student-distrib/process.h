@@ -12,12 +12,9 @@
 #define NEAREST_8KB_BOUND 0x007fe000 //8MB - 8KB
 #define USER_ESP 0x8400000 - sizeof(int32_t)
 
-// pcb_t* get_pcb(); //return the current operating pcb based on curr_process global watcher
-// pcb_t* get_pcb_from_pid(uint32_t pid); //return the pcb based on the given pid
 int32_t system_execute(const uint8_t* command);
 int32_t system_halt(uint16_t status);
 pcb_t* getRunningPCB(); //get the most recently running pcb from the stack
-// void iret_helper();
 
 //////HELPERS FOR EXECUTE (easier testing suite)///////
 void parse_command(const uint8_t* command, uint8_t* cmd, uint8_t *arg1);

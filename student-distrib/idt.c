@@ -5,6 +5,7 @@
 #include "keyboard.h"
 #include "int_handler.h"
 #include "syscall-handler/sys_linkage.h"
+#include "process.h"
 /*
  0 #DE Divide Error Fault No DIV and IDIV instructions.
  1 #DB RESERVED Fault/

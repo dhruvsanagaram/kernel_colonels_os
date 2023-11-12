@@ -1,4 +1,5 @@
 #include "filesys.h"
+#include "process.h"
 
 #define SUCCESS 0
 #define FAILURE 1
@@ -24,17 +25,10 @@ int32_t init_fs(unsigned int filesys_addr){
   printf("Num bytes in superblock: %d\n", sizeof(superblock_t));
   uint32_t num_inodes = boot_base_addr->inode_ct;
   dentry_start_ptr = (dentry_t*)(boot_base_addr->dentries);
-  // inode_start_ptr = (inode_t*)(boot_base_addr + 1);
-  // inode_start_ptr = boot_base_addr + 0x1000
   inode_start_ptr = (inode_t*)(boot_base_addr + 1); //boot_base_addr + size of the superblock (4kB)
-  // data_block_ptr = inode_start_ptr + 0x40000; //boot_base_addr + num_inodes * size of inodes(4kB);
   data_block_ptr = (uint32_t*)(inode_start_ptr + num_inodes);
   //initialize file descriptor table for bookkeeping
-  //no need for this ^^^^^
-  // for(i=0; i < MAX_NUM_FILES; ++i){
-  //   fd_arr[i].inode_num = -1; //fdarr not in use yet
-  //   fd_arr[i].position = 0; //initial position
-  // }
+
   return SUCCESS; //filesys properly intialize
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////

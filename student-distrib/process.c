@@ -8,7 +8,6 @@
 
 int32_t process_slots[3] = {0, 0, 0};
 uint32_t cur_PID = -1;    //watcher for current pid being executed
-// uint32_t backlog_pid = -1; //watcher for the backlog (parent pid) for subsequently spawned processes
 
 /**
 * getRunningPCB
@@ -18,32 +17,10 @@ uint32_t cur_PID = -1;    //watcher for current pid being executed
 */
 pcb_t* getRunningPCB() {
     pcb_t* pcb;
-    // asm volatile("andl %%esp, %0" 
-    //              : "=r"(pcb) :"r"(NEAREST_8KB_BOUND));
-    pcb = (pcb_t*)(0x800000 - 0x2000*(cur_PID+1));
+    pcb = (pcb_t*)(0x800000 - 0x2000*(cur_PID+1)); //Current PCB location: 8MB - 8kB * (pid # + 1)
     return pcb;
 }
 
-/**
-* setupIRET
-* inputs: none
-* output: void
-* side effects: Setup the IRET context for kernel->user transition
-*/
-// void setupIRET(){
-//     asm volatile(
-//         "movw %%ax, %ds\n\t" // Move USER_DS from eax to data segment
-//         "pushl %%eax\n\t" //push user data segment to the stack
-//         "pushl %%ebx\n\t" //push esp argument from pcb into stack
-//         "pushfl\n\t" //push flags to the stack
-//         "pushl %%ecx\n\t" //push user context to stack
-//         "pushl %%edx\n\t" //push eip argument from pcb into stack
-//         "iret\n\t" //interrupt ret
-//         "EXECUTE_RETURN: " //interrupt ret
-//         : : "a"(USER_DS), "b"(esp), "c"(USER_CS), "d"(eip)
-//         : "cc", "memory"
-//     );
-// }
 
 /**
 * system_halt
@@ -53,43 +30,18 @@ pcb_t* getRunningPCB() {
 */
 int32_t system_halt(uint16_t status){
     int i;                                      //for iterating across every FDs that are running
-
     cli();                                      //mask interrupts
 
-    // printf("Start halt\n");
-
-
     pcb_t* pcb = getRunningPCB();               //get the running PCB
-
-
-    // printf("%d\n",pcb->pid);
-
-    // printf("%d\n",pcb->parent_pid);
-    
-    // printf("%d\n",pcb->tss_kernel_stack_ptr);
-    
-    // printf("%d\n",pcb->process_eip);
-    
-    // printf("%d\n",pcb->process_esp);
-    
-    // printf("%d\n",pcb->process_ebp);
-
     if(pcb == NULL){
-        // printf("HALT: No running process ATM\n");  
         return -FAILURE;
     }
 
-
-
-    // printf("PCB found");
-
     //Restore parent data
-    pcb_t* parent_pcb = (pcb_t*)(0x800000 - 0x2000 * (pcb->parent_pid+1));  //retrieve parent_pcb start address
-    //cur_PID = parent_pcb->pid;
+    // pcb_t* parent_pcb = (pcb_t*)(0x800000 - 0x2000 * (pcb->parent_pid+1));  //retrieve parent_pcb start address
     cur_PID = pcb->parent_pid;
     tss.ss0 = KERNEL_DS;
-    tss.esp0 = 0x800000 - 0x2000 * (pcb->parent_pid); //did -4 before
-    // parent_pcb->tss_kernel_stack_ptr = tss.esp0;
+    tss.esp0 = 0x800000 - 0x2000 * (pcb->parent_pid); //getting start pointer of kernel stack for process
 
     //Restore parent paging(& flush TLB)
     user_page_setup(cur_PID);
@@ -123,9 +75,7 @@ int32_t system_halt(uint16_t status){
     ebp = pcb->process_ebp;
     esp = pcb->process_esp; //set it to stack ptr in kernel space   
     
-    // printf("ESP %x\n", esp);
-    // printf("EBP %x\n", ebp);
-
+    //restore ebp and esp for that of parent process
     sti();
     asm volatile(
         "movl %0, %%esp\n\t"
@@ -189,7 +139,7 @@ int32_t check_exec(dentry_t* dentry, uint8_t* buffer, uint8_t* cmd){
     //retrieves the dentry given the filename and reads 40 bytes of data and checks executable
     if(read_dentry_by_name(&cmd[0], dentry) == -FAILURE 
         || (read_data(dentry->inode_num, 0, buffer, 40) != 40)
-        || (buffer[0] != 0x7F || buffer[1] != 0x45 || buffer[2] != 0x4C || buffer[3] != 0x46)){
+        || (buffer[0] != 0x7F || buffer[1] != 0x45 || buffer[2] != 0x4C || buffer[3] != 0x46)){     //executable magic numbers
         return 0; //not executable
     }
     return 1; //is executable
@@ -202,21 +152,17 @@ int32_t check_exec(dentry_t* dentry, uint8_t* buffer, uint8_t* cmd){
 * side effects: Parse arguments, check if executable, setup paging, load file, context switch, setup IRET
 */
 int32_t system_execute(const uint8_t* command) {
-    //Parse args
     cli();      
 
-    ////PARSE COMMANDS AND ARGS
+    //PARSE COMMANDS AND ARGS
     int i;
     uint8_t cmd[CMD_SIZE];
     uint8_t arg1[ARG_SIZE];
     parse_command(command, cmd, arg1);
-    // int32_t ret;
 
     //Check if command exists and executable
     dentry_t dentry;
     uint8_t buffer[40];
-    // printf("Checking exec...");
-    // printf(command);
     if(!check_exec(&dentry, buffer, cmd)) return -FAILURE;
     
     //Get a free PID
@@ -246,32 +192,19 @@ int32_t system_execute(const uint8_t* command) {
 
     //Load file
     inode_t* prog_img_inode = &inode_start_ptr[dentry.inode_num];
-    // uint8_t prog_img_buf[10000];
-    // printf("Reading data...");
-    if (read_data(dentry.inode_num, 0, (uint8_t*)0x08048000, prog_img_inode->len) == -FAILURE) {
+    if (read_data(dentry.inode_num, 0, (uint8_t*)0x08048000, prog_img_inode->len) == -FAILURE) {    //program image start addr
         return -FAILURE;
     }
-    
-    // if (read_data(dentry.inode_num, 0, (uint8_t*)0x08048000, prog_img_inode->len) == -FAILURE) {
-    //     return -FAILURE;
-    // }
-    // printf("Copying to program image...");
-    // memcpy((uint8_t*)0x08048000,prog_img_buf,prog_img_inode->len);
-    // printf("Image size: %d\n", prog_img_inode->len);
-
-    // memcpy((uint8_t*)0x08048000,prog_img_buf,prog_img_inode->len);
-
     pcb_t* pcb = (pcb_t*)(0x0800000 - (0x2000 * (cur_PID + 1)));
     pcb->pid = cur_PID;
     if(cur_PID == 0){
-        //pcb->parent_pid = cur_PID; //this was spawned by the current watcher
         pcb->parent_pid = pcb->pid; 
     }
     else {
         pcb->parent_pid = cur_PID - 1;
-        //pcb->parent_pid = backlog_pid;
     }
 
+    // initialize fd
     pcb->fd_arr[0].fops = &stdin_fops;
     pcb->fd_arr[0].inode_num = 0;
     pcb->fd_arr[0].fpos = 0;
@@ -291,58 +224,34 @@ int32_t system_execute(const uint8_t* command) {
     //Context switch
     uint8_t eip_buffer[4];
     uint32_t eip, esp, ebp;
-    if(read_data(dentry.inode_num, 24, eip_buffer, sizeof(int32_t)) == -FAILURE){
+    if(read_data(dentry.inode_num, 24, eip_buffer, sizeof(int32_t)) == -FAILURE){       //read bytes 24-27 of executable
         return -FAILURE;
     }
     eip = *((int*)(eip_buffer));
-    //esp = USER_ADDR - EIGHT_KB*(cur_PID+1);                          // USER MEMORY ADDRESS + 4 MEGABYTE PAGE FOR START (and int32_t align)= 
-
-    asm("\t movl %%esp, %0" : "=r"(esp));
+    asm("\t movl %%esp, %0" : "=r"(esp)); // copying kernel esp to a local var
     pcb->process_eip = eip;
-    
     asm("\t movl %%ebp, %0" : "=r"(ebp)); //fill current program ebp
     pcb->process_ebp = ebp;
     pcb->process_esp = esp; //this should be the kernel esp
-
-
-    tss.ss0 = KERNEL_DS; // line right
-    //tss.esp0 = 0x800000 - (0x2000*(cur_PID+1));   //might be wrong and we have to 4Byte align
-    // tss.esp0 = 0x800000 - 0x2000*(cur_PID+1) - 4;
-    // tss.esp0 = 0x800000 - 0x2000*(cur_PID + 1) - 4;
-    // tss.esp0 = 0x800000 - 0x2000*cur_PID - sizeof(int32_t);
+    tss.ss0 = KERNEL_DS;
     tss.esp0 = 0x800000 - 0x2000*(cur_PID);
-    // pcb->tss_kernel_stack_ptr = tss.esp0;
-
-    // setupIRET();
-    //Push IRET Context to Stack
-    // sti();
-
-    // printf("\n%x",eip);
-    // printf("\n%x",esp);
-    // printf("\n%x",tss.esp0);
-    // printf("\n");
-
 
 
     sti();
-
     asm volatile(
-        "pushl $0x002B\n\t" // Move USER_DS from eax to data segment
+        "pushl %0\n\t" // Move USER_DS from eax to data segment
         "pushl %1\n\t" //push user data segment to the stack
         "pushfl\n\t" //push flags to the stack
-        "pushl $0x0023\n\t" //push esp argument from pcb into stack
+        "pushl %2\n\t" //push esp argument from pcb into stack
         "pushl %3\n\t" //push user context to stack
         : : "r"(USER_DS), "r"(USER_ESP), "r"(USER_CS), "r"(eip)
     );
 
-
+    //pushing to kernel stack for iret to set segment registers for syscalls
     asm volatile(
         "iret\n\t"
         "EXECUTE_RETURN: "
     );
 
-    // printf("Bottom of execute\n");
-    // while(1);
-    // sti();
     return SUCCESS;
 }

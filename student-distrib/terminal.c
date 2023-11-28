@@ -1,10 +1,84 @@
 #include "keyboard.h" 
 #include "terminal.h"
+#include "page.h"
 #include "lib.h"
 #include "i8259.h"
 
+
+
 int numChars = 0;
 int enterKeyPressed = 0;
+
+terminal_t *run_term = terminals[0];
+terminal_t *view_term = terminals[0];
+
+void terminal_switch(int32_t target_tid){
+    if(target_tid == view_term->tid){
+        return;
+    }
+    
+    // terminal_t* curr_term = &terminals[view_term->tid];
+    terminal_t* target_term = terminals[target_tid];
+
+    //save info about current terminal to curr_term
+    
+    // view_term->buf_pos = glbl_buf_pos;   //save the current position within the buffer we are reading to come back to it
+    
+    
+    // glbl_buf_pos = target_term->buf_pos
+    //retrieve info about target terminal from term_target
+
+    //update cursor position to that of term_target
+
+    update_video_memory_paging(view_term->tid);
+    view_term = terminals[target_tid];
+    memcpy((void*)(view_term->vidmem_data), (void*)VIDEO_ADDR, FOUR_KB);
+    memcpy((void*)(VIDEO_ADDR, (void*)(target_term->vidmem_data), FOUR_KB));
+    update_video_memory_paging(run_term->tid);  //Should it be target_tid? Since current_pid 
+                                                //denotes the process currently being executed as determined
+                                                //by the scheduler, update_video_memory_paging(get_owner_terminal(current_pid))
+                                                //denotes the terminal corresponding to current_pid, which may 
+                                                //not be a process in the target terminal. 
+                                                //So update_video_memory_paging(get_owner_terminal(current_pid)) would be wrong then
+}
+
+void update_video_memory_paging(int term_id){
+    /*
+        1. update (save) cursor positions for switching to term_id
+        2. update the vidmem mapping by switching based on the vidmem page for the terminal specified by term_id
+        3. flush TLB
+    */
+    //the cursors below initialized in terminal_init()
+    screen_x = terminals[term_id]->cursor_x;
+    screen_y = terminals[term_id]->cursor_y;
+    update_cursor(screen_x,screen_y);
+    
+    if(view_term->tid == term_id){          //backing store
+        //do the paging for same terminal
+        page_tables[VIDEO_ADDR >> 12].base_addr = VIDEO_ADDR / FOUR_KB;
+        //change user video memory mapping
+        page_video_map[VIDEO_ADDR >> 12].base_addr = VIDEO_ADDR / FOUR_KB;
+        page_video_map[VIDEO_ADDR >> 12].present = terminals[term_id]->vidmap_present;
+
+    } else {                                //active store  
+        //do paging for a diff terminal
+        page_tables[VIDEO_ADDR >> 12].base_addr = terminals[term_id]->vidmem_data / FOUR_KB;
+        page_video_map[VIDEO_ADDR >> 12].base_addr = terminals[term_id]->vidmem_data / FOUR_KB;
+        page_video_map[VIDEO_ADDR >> 12].present = terminals[term_id]->vidmap_present;
+    }
+
+    //flush TLB
+    asm volatile(
+        "movl %%cr3, %%eax\n\t"
+        "movl %%eax, %%cr3\n\t"
+        : : : "memory"
+    );
+}
+
+
+///////////////////////////////////////////////////// TERM_SYSCALLS /////////////////////////////////////////////////////
+
+
 
 /* terminal_read(int32_t fd, void* buf, int32_t nbytes)
  * Inputs: int32_t fd, void* buf, int32_t nbytes

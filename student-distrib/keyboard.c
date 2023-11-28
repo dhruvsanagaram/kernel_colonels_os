@@ -9,6 +9,17 @@
 #define KEYB_IRQ_P 0x60
 #define KEYB_STAT 0x64
 #define CAPS_CHAR 0x3A
+#define ALT_PRESSED 0x38
+#define ALT_RELEASED 0xB8
+
+
+#define F1_PRESSED 0x3B
+#define F1_RELEASED 0xBB
+#define F2_PRESSED 0x3C
+#define F2_RELEASED 0xBC
+#define F3_PRESSED 0x3D
+#define F3_RELEASED 0xBD
+
 #define BCKSPC_CHAR 0x0E
 
 #define LOWER_TBL 0
@@ -49,6 +60,7 @@ char key_buf[MAX_BUF_SIZE];
 unsigned int caps_was_active = 0;
 unsigned int shift_pressed = 0;
 unsigned int del_pressed = 0;
+unsigned int alt_pressed = 0;
 unsigned int enter_pressed = 0;
 unsigned int table_to_read_from = 0;
 
@@ -168,7 +180,51 @@ void keyb_main(void)
             restore_flags(flags);
             return;
         }
-
+        //ALT PRESSED
+        if(userin == ALT_PRESSED){
+            alt_pressed = 1;
+            send_eoi(1);
+            restore_flags(flags);
+            return;
+        }
+        //ALT RELEASED
+        if(userin == ALT_RELEASED) {
+            alt_pressed = 0;
+            send_eoi(1);
+            restore_flags(flags);
+            return;
+        }
+        //F1, F2, F3 PRESSED
+        if(userin == F1_PRESSED){
+            if(alt_pressed){
+                terminal_switch(0);
+            }
+            send_eoi(1);
+            restore_flags(flags);
+            return;
+        }
+        if(userin == F2_PRESSED){
+            if(alt_pressed){
+                terminal_switch(1);
+            }
+            send_eoi(1);
+            restore_flags(flags);
+            return;
+        }
+        if(userin == F3_PRESSED){
+            if(alt_pressed){
+                terminal_switch(2);
+            }
+            send_eoi(1);
+            restore_flags(flags);
+            return;
+        }
+        //F1, F2, F3 RELEASED
+        if(userin == F1_RELEASED || userin == F2_RELEASED || userin == F3_RELEASED) {
+            send_eoi(1);
+            restore_flags(flags);
+            return;
+        }
         // CAPSLOCK
         // caps pressed once...
         if (userin == CAPS_CHAR)

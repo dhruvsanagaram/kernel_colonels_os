@@ -20,6 +20,7 @@ int32_t pit_handler() {
     cli();
     //send eoi to the irq line for the PIT (0)
     //Step 2: Scheduler
+    update_video_memory_paging(target_terminals->tid);
     next_process();
     sti();
     return SUCCESS;

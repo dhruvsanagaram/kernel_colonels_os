@@ -1,7 +1,5 @@
 #define ASM 1
 .globl sys_call_table, handle_syscall, invalid, dispatch_syscall
-
-
 # Syscall: Move following information to registers
 # EAX: system call number IMPORTANT: VERIFY THIS NUMBER IS VALID
 # EBX 1st arg

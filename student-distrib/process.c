@@ -2,12 +2,14 @@
 #include "lib.h"
 #include "page.h"
 #include "x86_desc.h"
+#include "terminal.h"
 
 #define SUCCESS 0
 #define FAILURE 1
 
-int32_t process_slots[3] = {0, 0, 0};
+int32_t process_slots[6] = {0, 0, 0, 0, 0, 0};
 uint32_t cur_PID = -1;    //watcher for current pid being executed
+int32_t cur_terminal = 0; //index out of 3 terminals
 
 /**
 * getRunningPCB
@@ -19,6 +21,73 @@ pcb_t* getRunningPCB() {
     pcb_t* pcb;
     pcb = (pcb_t*)(0x800000 - 0x2000*(cur_PID+1)); //Current PCB location: 8MB - 8kB * (pid # + 1)
     return pcb;
+}
+
+
+pcb_t* getPCBByPid(int pid) {
+    pcb_t* pcb;
+    pcb = (pcb_t*)(0x800000 - 0x2000*(pid+1)); //Current PCB location: 8MB - 8kB * (pid # + 1)
+    return pcb;
+}
+
+
+//Perform a switch to the next appropriate process for the terminal
+void next_process(){
+    /*
+        * TODO: Video memory switching/paging
+        * TODO: Scheduling
+        1. save the info for the current running process 
+        2. update the info for the curr pcb ==> set curr_term_pcb to new_term_pcb
+        3. set the ebp, esp to the new_term_pcbs's values
+        4. setup correct TSS of target process
+        5. Paging
+    */
+
+
+    //Step 1
+    pcb_t* pcb = getRunningPCB();
+    if(cur_PID){
+        pcb->tss_kernel_stack_ptr = tss.esp0;
+        asm volatile(
+            "movl %%esp, %0 \n\t"
+            "movl %%ebp, %1 \n\t"
+            : "=r" (pcb->process_esp), "=r" (pcb->process_ebp)
+        );
+    }
+    
+    //Step 2
+    terminal_t* new_terminal = terminals[(cur_terminal++) % 3]; //default as 0 not -1
+    int32_t new_pid = new_terminal->pid;
+    cur_PID = new_pid;
+    // global cur diff as new process
+
+    if(new_pid == -1){
+        system_execute("shell");
+    }
+
+    //Step 3
+    // left to right
+    pcb_t* new_term_PCB = getPCBByPid(new_pid);
+    asm volatile(
+            "movl %0, %%esp \n\t" 
+            "movl %1, %%ebp \n\t"
+            : : "r" (new_term_PCB->process_esp), "r" (new_term_PCB->process_ebp)
+    );
+
+    //Step 4
+    tss.ss0 = KERNEL_DS;
+    tss.esp0 = new_term_PCB->tss_kernel_stack_ptr;
+    // tss.esp0 = 0x800000 - 0x2000*(new_terminal->running_PID)
+
+    //Step 5
+    user_page_setup(new_pid); // done by pid thanks to earlier coding
+
+    //flush TLB
+    asm volatile(
+        "movl %%cr3, %%eax \n\t"
+        "movl %%eax, %%cr3 \n\t"
+        : : : "memory"
+    );
 }
 
 
@@ -64,10 +133,10 @@ int32_t system_halt(uint16_t status){
         pcb->fd_arr[i].fops = &nul_fops;                     //no more file ops for FDs >:)
     }
 
-    if(process_slots[0] == 0 && process_slots[1] == 0 && process_slots[2] == 0){
-        system_execute((uint8_t*)("shell")); //relaunch the shell
-        return SUCCESS;
-    }
+    // if(process_slots[0] == 0 && process_slots[1] == 0 && process_slots[2] == 0){
+    //     system_execute((uint8_t*)("shell")); //relaunch the shell
+    //     return SUCCESS;
+    // }
 
     //Jump to execute return
     uint32_t esp, ebp;
@@ -167,7 +236,7 @@ int32_t system_execute(const uint8_t* command) {
     
     //Get a free PID
     int32_t check_PID = -1;
-    for (i = 0; i < 3; i++) {
+    for (i = 0; i < 6; i++) {
         if (process_slots[i] == 0){
             process_slots[i] = 1;
             check_PID = i;

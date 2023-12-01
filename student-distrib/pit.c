@@ -4,6 +4,7 @@
 #include "page.h"
 #include "x86_desc.h"
 #include "terminal.h"
+#include "process.h"
 
 #define SUCCESS 0
 

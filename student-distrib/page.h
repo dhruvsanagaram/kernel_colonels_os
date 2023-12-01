@@ -62,6 +62,7 @@ typedef struct page_table_entry_t {
 page_dir_entry_t page_directory[PAGE_SIZE] __attribute__((aligned(FOUR_KB)));
 page_table_entry_t page_tables[PAGE_SIZE] __attribute__((aligned(FOUR_KB)));
 page_table_entry_t page_video_map[PAGE_SIZE] __attribute__((aligned(FOUR_KB)));
+void vidmap_page_change(int idx_20, unsigned int present);
 
 
 //user page setup

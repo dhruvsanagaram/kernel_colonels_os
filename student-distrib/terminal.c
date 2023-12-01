@@ -42,7 +42,7 @@ int32_t init_terms() {
     schedule_term = terminals[0];
     view_term = terminals[0];
 
-    system_execute("shell");
+    system_execute((uint8_t*)"shell");
     
     return 0;
 }
@@ -77,7 +77,7 @@ void terminal_switch(int32_t target_tid){ // TO-DO: If pid = -1, run shell
                                                 //So update_video_memory_paging(get_owner_terminal(current_pid)) would be wrong then
 
     if (view_term->pid == -1) {
-        system_execute("shell");
+        system_execute((uint8_t*)"shell");
     }
 
 }

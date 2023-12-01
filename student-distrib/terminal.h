@@ -5,7 +5,7 @@
 
 #define _128MB 0x8000000
 #define FOUR_MB 0x400000
-#define FOUR_KB 0x1000
+// #define FOUR_KB 0x1000
 
 #define VIDMEM_TERM1_START _128MB + FOUR_MB
 #define VIDMEM_TERM2_START _128MB + FOUR_MB + FOUR_KB
@@ -29,6 +29,7 @@ int32_t terminal_write(int32_t fd, const void *buf, int32_t nbytes);
 int32_t terminal_open(const uint8_t *filename);
 int32_t terminal_close(int32_t fd);
 int32_t init_terms();
+void terminal_switch(int32_t target_tid);
 
 typedef struct {
   int32_t tid;

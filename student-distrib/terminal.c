@@ -10,7 +10,7 @@ int numChars = 0;
 int enterKeyPressed = 0;
 terminal_t* schedule_term;
 terminal_t* view_term;
-terminal_t* terminals[3];
+terminal_t terminals[3];
 
 
 
@@ -18,16 +18,17 @@ int32_t init_terms() {
     //populate the terminal structs in the terminals array
     // schedule_term = terminals[0];
     // view_term = terminals[0];
-    int i;
+    int32_t i;
     for (i = 0; i < MAX_TERMS; i++) {
-        terminals[i]->tid = i;
-        terminals[i]->pid = -1;
-        terminals[i]->enterKeyPressed = 0;
-        terminals[i]->keyb_char_count = 0;
-        terminals[i]->cursor_x = 0;
-        terminals[i]->cursor_y = 0;
-        terminals[i]->vidmem_data = VIDEO_ADDR + (i+1) * FOUR_KB;
-    
+        terminal_t add_term;
+        add_term.tid = i;
+        add_term.pid = -1;
+        add_term.enterKeyPressed = 0;
+        add_term.keyb_char_count = 0;
+        add_term.cursor_x = 0;
+        add_term.cursor_y = 0;
+        add_term.vidmem_data = VIDEO_ADDR + (i+1) * FOUR_KB;
+        terminals[i] = add_term;
     }
     //flush the TLB
     asm volatile(
@@ -36,11 +37,11 @@ int32_t init_terms() {
         : : : "memory"
     );
     //update global viewing buf_pos and global keyb_buf as needed
-    screen_x = terminals[0]->cursor_x;
-    screen_y = terminals[0]->cursor_y;
+    screen_x = terminals[0].cursor_x;
+    screen_y = terminals[0].cursor_y;
     update_cursor(screen_x, screen_y);
-    schedule_term = terminals[0];
-    view_term = terminals[0];
+    schedule_term = &terminals[0];
+    view_term = &terminals[0];
 
     system_execute((uint8_t*)"shell");
     
@@ -53,7 +54,7 @@ void terminal_switch(int32_t target_tid){ // TO-DO: If pid = -1, run shell
     }
 
     // terminal_t* curr_term = &terminals[view_term->tid];
-    terminal_t* target_term = terminals[target_tid];
+    terminal_t* target_term = &terminals[target_tid];
 
     //save info about current terminal to curr_term
     // view_term->key_buf = key_buf;
@@ -66,7 +67,7 @@ void terminal_switch(int32_t target_tid){ // TO-DO: If pid = -1, run shell
     enterKeyPressed = target_term->enterKeyPressed;
     
     update_video_memory_paging(view_term->tid);
-    view_term = terminals[target_tid];
+    view_term = &terminals[target_tid];
     memcpy((void*)(view_term->vidmem_data), (void*)VIDEO_ADDR, FOUR_KB);
     memcpy((void*)(VIDEO_ADDR), (void*)(target_term->vidmem_data), FOUR_KB);
     update_video_memory_paging(schedule_term->tid);  //Should it be target_tid? Since current_pid 
@@ -89,26 +90,28 @@ void update_video_memory_paging(int term_id){
         3. flush TLB
     */
     //the cursors below initialized in terminal_init()
-    screen_x = terminals[term_id]->cursor_x;
-    screen_y = terminals[term_id]->cursor_y;
-    update_cursor(screen_x,screen_y);
+    // terminals[]
+
+    // screen_x = terminals[term_id].cursor_x;
+    // screen_y = terminals[term_id].cursor_y;
+    // update_cursor(screen_x,screen_y);
     
     if(view_term->tid == term_id){          //backing store
         //do the paging for same terminal
         page_tables[VIDMAP_IDX].base_addr = VIDEO_ADDR / FOUR_KB;
         //change user video memory mapping
         page_video_map[VIDMAP_IDX].base_addr = VIDEO_ADDR / FOUR_KB;
-        int tar_pid = terminals[term_id]->pid;
+        int tar_pid = terminals[term_id].pid;
         page_video_map[VIDMAP_IDX].present = getPCBByPid(tar_pid)->vidmap_present;
         // page_video_map[VIDMAP_IDX].present = terminals[term_id]->vidmap_present;
 
     } else {                                //active store  
         //do paging for a diff terminal
-        page_tables[VIDMAP_IDX].base_addr = terminals[term_id]->vidmem_data / FOUR_KB;
-        page_video_map[VIDMAP_IDX].base_addr = terminals[term_id]->vidmem_data / FOUR_KB;
+        page_tables[VIDMAP_IDX].base_addr = terminals[term_id].vidmem_data / FOUR_KB;
+        page_video_map[VIDMAP_IDX].base_addr = terminals[term_id].vidmem_data / FOUR_KB;
         // page_video_map[VIDMAP_IDX].present = terminals[term_id]->vidmap_present;
         page_video_map[VIDMAP_IDX].base_addr = VIDEO_ADDR / FOUR_KB;
-        int tar_pid = terminals[term_id]->pid;
+        int tar_pid = terminals[term_id].pid;
         page_video_map[VIDMAP_IDX].present = getPCBByPid(tar_pid)->vidmap_present;
     }
 

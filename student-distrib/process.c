@@ -59,7 +59,7 @@ void next_process(){
 
     
     //Step 2
-    terminal_t* new_terminal = terminals[(cur_terminal++) % 3]; //default as 0 not -1
+    terminal_t* new_terminal = &terminals[(cur_terminal++) % 3]; //default as 0 not -1
     int new_pid = new_terminal->pid;
     cur_PID = new_pid;
     // new_terminal->pid = cur_PID;

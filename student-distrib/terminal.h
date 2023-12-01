@@ -51,7 +51,7 @@ typedef struct {
   
 } terminal_t;
 
-extern terminal_t* terminals[3];
+extern terminal_t terminals[3];
 extern terminal_t *schedule_term;
 extern terminal_t *view_term;
 

@@ -14,6 +14,8 @@
 #include "keyboard.h"
 #include "filesys.h"
 #include "syscall-handler/syscall.h"
+#include "terminal.h"
+#include "pit.h"
 
 #define RUN_TESTS
 
@@ -172,6 +174,9 @@ void entry(unsigned long magic, unsigned long addr) {
     keyb_init();
     page_init();
     populate_fops(); //fop ops ready
+    pit_init(1000);
+    init_terms();
+    
     // user_page_setup(0);
     
 

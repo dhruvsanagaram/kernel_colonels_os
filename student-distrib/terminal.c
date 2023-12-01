@@ -3,26 +3,30 @@
 #include "page.h"
 #include "lib.h"
 #include "i8259.h"
-
+#include "process.h"
 
 
 int numChars = 0;
 int enterKeyPressed = 0;
-
+terminal_t* schedule_term;
+terminal_t* view_term;
+terminal_t* terminals[3];
 
 
 
 int32_t init_terms() {
     //populate the terminal structs in the terminals array
+    // schedule_term = terminals[0];
+    // view_term = terminals[0];
     int i;
     for (i = 0; i < MAX_TERMS; i++) {
-        terminals[i].tid = i;
-        terminals[i].pid = -1;
-        terminals[i].buf_pos = 0;
-        terminals[i].cursor_x = 0;
-        terminals[i].cursor_y = 0;
-        terminals[i].vidmap_present = 0;
-        terminals[i].vidmem_data = VIDEO_ADDR + (i+1) * FOUR_KB;
+        terminals[i]->tid = i;
+        terminals[i]->pid = -1;
+        terminals[i]->enterKeyPressed = 0;
+        terminals[i]->keyb_char_count = 0;
+        terminals[i]->cursor_x = 0;
+        terminals[i]->cursor_y = 0;
+        terminals[i]->vidmem_data = VIDEO_ADDR + (i+1) * FOUR_KB;
     
     }
     //flush the TLB
@@ -35,8 +39,10 @@ int32_t init_terms() {
     screen_x = terminals[0]->cursor_x;
     screen_y = terminals[0]->cursor_y;
     update_cursor(screen_x, screen_y);
+    schedule_term = terminals[0];
+    view_term = terminals[0];
 
-    system_exectue("shell");
+    system_execute("shell");
     
     return 0;
 }
@@ -50,8 +56,10 @@ void terminal_switch(int32_t target_tid){ // TO-DO: If pid = -1, run shell
     terminal_t* target_term = terminals[target_tid];
 
     //save info about current terminal to curr_term
-    view_term->key_buf = key_buf;
-    key_buf = target_term->key_buf;
+    // view_term->key_buf = key_buf;
+    memcpy(view_term->key_buf,key_buf,sizeof(key_buf));
+    // key_buf = target_term->key_buf;
+    memcpy(key_buf,target_term->key_buf,sizeof(target_term->key_buf));
     view_term->keyb_char_count = keyb_char_count;  
     keyb_char_count = target_term->keyb_char_count;
     view_term->enterKeyPressed = enterKeyPressed;
@@ -60,7 +68,7 @@ void terminal_switch(int32_t target_tid){ // TO-DO: If pid = -1, run shell
     update_video_memory_paging(view_term->tid);
     view_term = terminals[target_tid];
     memcpy((void*)(view_term->vidmem_data), (void*)VIDEO_ADDR, FOUR_KB);
-    memcpy((void*)(VIDEO_ADDR, (void*)(target_term->vidmem_data), FOUR_KB));
+    memcpy((void*)(VIDEO_ADDR), (void*)(target_term->vidmem_data), FOUR_KB);
     update_video_memory_paging(schedule_term->tid);  //Should it be target_tid? Since current_pid 
                                                 //denotes the process currently being executed as determined
                                                 //by the scheduler, update_video_memory_paging(get_owner_terminal(current_pid))
@@ -90,13 +98,18 @@ void update_video_memory_paging(int term_id){
         page_tables[VIDMAP_IDX].base_addr = VIDEO_ADDR / FOUR_KB;
         //change user video memory mapping
         page_video_map[VIDMAP_IDX].base_addr = VIDEO_ADDR / FOUR_KB;
-        page_video_map[VIDMAP_IDX].present = terminals[term_id]->vidmap_present;
+        int tar_pid = terminals[term_id]->pid;
+        page_video_map[VIDMAP_IDX].present = getPCBByPid(tar_pid)->vidmap_present;
+        // page_video_map[VIDMAP_IDX].present = terminals[term_id]->vidmap_present;
 
     } else {                                //active store  
         //do paging for a diff terminal
         page_tables[VIDMAP_IDX].base_addr = terminals[term_id]->vidmem_data / FOUR_KB;
         page_video_map[VIDMAP_IDX].base_addr = terminals[term_id]->vidmem_data / FOUR_KB;
-        page_video_map[VIDMAP_IDX].present = terminals[term_id]->vidmap_present;
+        // page_video_map[VIDMAP_IDX].present = terminals[term_id]->vidmap_present;
+        page_video_map[VIDMAP_IDX].base_addr = VIDEO_ADDR / FOUR_KB;
+        int tar_pid = terminals[term_id]->pid;
+        page_video_map[VIDMAP_IDX].present = getPCBByPid(tar_pid)->vidmap_present;
     }
 
     //flush TLB

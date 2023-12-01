@@ -2,6 +2,7 @@
  * vim:ts=4 noexpandtab */
 
 #include "lib.h"
+#include "terminal.h"
 
 #define ASM
 
@@ -227,7 +228,7 @@ int32_t puts(int8_t* s) {
 // }
 
 void putc(uint8_t c) {
-    update_video_memory_paging(view_term->id); //Change vidmem mapping
+    update_video_memory_paging(view_term->tid); //Change vidmem mapping
     if (c == '\b') {
         *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x-1) << 1)) = ' ';
         *(uint8_t *)(video_mem + ((NUM_COLS * screen_y + screen_x-1) << 1) + 1) = ATTRIB;
@@ -262,7 +263,7 @@ void putc(uint8_t c) {
         
     }
     update_cursor(screen_x, screen_y);
-    update_video_memory_paging(schedule_term->id); //Restore vidmem mapping
+    update_video_memory_paging(schedule_term->tid); //Restore vidmem mapping
 }
 
 

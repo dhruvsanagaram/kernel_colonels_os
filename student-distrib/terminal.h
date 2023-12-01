@@ -30,7 +30,7 @@ int32_t terminal_open(const uint8_t *filename);
 int32_t terminal_close(int32_t fd);
 int32_t init_terms();
 
-typedef struct terminal_t {
+typedef struct {
   int32_t tid;
   int32_t pid;
   //cursor locations within video
@@ -51,8 +51,8 @@ typedef struct terminal_t {
 } terminal_t;
 
 extern terminal_t* terminals[3];
-extern terminal_t *schedule_term = terminals[0];
-extern terminal_t *view_term = terminals[0];
+extern terminal_t *schedule_term;
+extern terminal_t *view_term;
 
 
 

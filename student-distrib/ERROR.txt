@@ -1,4 +1,36 @@
 Makefile:39: Makefile.dep: No such file or directory
-make: Warning: File `syscall-handler/syscall.c' has modification time 35 s in the future
-make: Warning: File `Makefile.dep' has modification time 48 s in the future
+make: Warning: File `terminal.c' has modification time 18 s in the future
+make: Warning: File `Makefile.dep' has modification time 20 s in the future
+keyboard.c: In function ‘keyb_main’:
+keyboard.c:200: warning: implicit declaration of function ‘terminal_switch’
+keyboard.c:322:2: warning: no newline at end of file
+page.c:137:2: warning: no newline at end of file
+In file included from pit.c:1:
+pit.h:9:7: warning: no newline at end of file
+In file included from pit.c:6:
+terminal.h:8:1: warning: "FOUR_KB" redefined
+In file included from pit.c:4:
+page.h:9:1: warning: this is the location of the previous definition
+pit.c: In function ‘pit_handler’:
+pit.c:33: warning: implicit declaration of function ‘next_process’
+In file included from process.c:5:
+terminal.h:8:1: warning: "FOUR_KB" redefined
+In file included from process.c:3:
+page.h:9:1: warning: this is the location of the previous definition
+process.c: In function ‘system_halt’:
+process.c:146: warning: implicit declaration of function ‘vidmap_page_change’
+In file included from terminal.c:3:
+page.h:9:1: warning: "FOUR_KB" redefined
+In file included from terminal.c:2:
+terminal.h:8:1: warning: this is the location of the previous definition
+terminal.c: In function ‘init_terms’:
+terminal.c:45: warning: pointer targets in passing argument 1 of ‘system_execute’ differ in signedness
+terminal.c: In function ‘terminal_switch’:
+terminal.c:80: warning: pointer targets in passing argument 1 of ‘system_execute’ differ in signedness
+In file included from syscall-handler/syscall.c:7:
+syscall-handler/../page.h:9:1: warning: "FOUR_KB" redefined
+In file included from syscall-handler/syscall.c:4:
+syscall-handler/../terminal.h:8:1: warning: this is the location of the previous definition
+syscall-handler/syscall.c: In function ‘vidmap’:
+syscall-handler/syscall.c:233: warning: implicit declaration of function ‘vidmap_page_change’
 make: warning:  Clock skew detected.  Your build may be incomplete.

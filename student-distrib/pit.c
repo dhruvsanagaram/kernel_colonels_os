@@ -1,4 +1,11 @@
 #include "pit.h"
+#include "lib.h"
+#include "i8259.h"
+#include "page.h"
+#include "x86_desc.h"
+#include "terminal.h"
+
+#define SUCCESS 0
 
 /* http://www.osdever.net/bkerndev/Docs/pit.htm */
 int32_t pit_init(int hz){ //Taken from OSDever for PIT

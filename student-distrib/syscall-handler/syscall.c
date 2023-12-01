@@ -227,7 +227,7 @@ int32_t vidmap (uint8_t** screen_start) {
     // terminals[term_id_cur].vidmap_present = 1;
 
     pcb_t *cur_pcb = getRunningPCB();
-    cur_pcb->vidmem_present = 1;
+    cur_pcb->vidmap_present = 1;
     
     if (schedule_term->tid == view_term->tid) {
         vidmap_page_change(VIDEO_ADDR / FOUR_KB, 1);

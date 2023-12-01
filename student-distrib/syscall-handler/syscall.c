@@ -222,8 +222,22 @@ int32_t vidmap (uint8_t** screen_start) {
 
     //set the pages in the page table for the video map
     page_video_map[0].present = 1;
-    page_video_map[0].user = 1; //set to user mode
-    page_video_map[0].base_addr = VIDEO_ADDR/FOUR_KB;
+    
+    // int32_t term_id_cur = view_term->tid;
+    // terminals[term_id_cur].vidmap_present = 1;
+
+    pcb_t *cur_pcb = getRunningPCB();
+    cur_pcb->vidmem_present = 1;
+    
+    if (schedule_term->tid == view_term->tid) {
+        vidmap_page_change(VIDEO_ADDR / FOUR_KB, 1);
+    }
+    else {
+        vidmap_page_change(schedule_term->vidmem_data / FOUR_KB, 1);
+    }
+
+    // page_video_map[0].user = 1; //set to user mode
+    // page_video_map[0].base_addr = VIDEO_ADDR/FOUR_KB;
 
     //flush tlb
     asm volatile(

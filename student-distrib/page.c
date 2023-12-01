@@ -121,3 +121,17 @@ void user_page_setup(int32_t cur_PID){
   page_directory[USER_IDX].ps_bit = 1;
 
 }
+
+//Changes the status of a given page within the video map table based on a given 20 bit index and whether or not
+//the page at the index is present or not
+void vidmap_page_change(int idx_20, unsigned int present){
+  page_table_entry_t page;
+  //set the page to present depending on the status
+  page.present = present;
+  page.rw = 1; //we can read/write to vidmap this way
+  page.user = 1; //page accessible in userspace
+  page.global = present; //globally accessible depending on if the page is present
+  page.base_addr = (uint32_t)idx_20; //ensure that this is 20 bit aligned
+
+  page_video_map[VIDMAP_IDX] = page;
+}

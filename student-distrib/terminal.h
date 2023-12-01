@@ -11,6 +11,7 @@
 #define VIDMEM_TERM2_START _128MB + FOUR_MB + FOUR_KB
 #define VIDMEM_TERM3_START _128MB + FOUR_MB + FOUR_KB + FOUR_KB
 #define VIDMEM_FISH _128MB + FOUR_MB + 3 * FOUR_KB
+#define MAX_TERMS 3
 
 #include "types.h"
 
@@ -27,6 +28,7 @@ int32_t terminal_read(int32_t fd, void* buf, int32_t nbytes);
 int32_t terminal_write(int32_t fd, const void *buf, int32_t nbytes);
 int32_t terminal_open(const uint8_t *filename);
 int32_t terminal_close(int32_t fd);
+int32_t init_terms();
 
 typedef struct terminal_t {
   int32_t tid;
@@ -37,13 +39,21 @@ typedef struct terminal_t {
   
   //paging offsets for this terminal 
   
-  uint32_t vidmem_data;
-  uint32_t vidmap_present;
+  uint32_t vidmem_data; //20 bits
+  // uint32_t vidmap_present;
+
+  //Keyboard vars
+
+  int enterKeyPressed;
+  int keyb_char_count;
+  char key_buf[MAX_BUF_SIZE];
   
 } terminal_t;
 
 extern terminal_t* terminals[3];
-extern terminal_t* target_terminals[3]; //initialize in terminal_init
+extern terminal_t *schedule_term = terminals[0];
+extern terminal_t *view_term = terminals[0];
+
 
 
 #endif /* TERMINAL_H */

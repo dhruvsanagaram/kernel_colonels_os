@@ -54,11 +54,16 @@ void next_process(){
             : "=r" (pcb->process_esp), "=r" (pcb->process_ebp)
         );
     }
+
+
     
     //Step 2
     terminal_t* new_terminal = terminals[(cur_terminal++) % 3]; //default as 0 not -1
     int32_t new_pid = new_terminal->pid;
     cur_PID = new_pid;
+    new_terminal->pid = cur_PID;
+    schedule_term = new_terminal;
+
     // global cur diff as new process
 
     if(new_pid == -1){
@@ -133,17 +138,45 @@ int32_t system_halt(uint16_t status){
         pcb->fd_arr[i].fops = &nul_fops;                     //no more file ops for FDs >:)
     }
 
+
+    
+    if (pcb->vidmem_present == 1) { //Vidmem in use for this process
+        if (schedule_term->tid == view_term->tid) {
+            vidmap_page_change(VIDEO_ADDR / 0x1000, 0);//Change vidmem mapping
+        }
+        else {
+            vidmap_page_change(schedule_term->vidmem_data / 0x1000, 0);
+        }
+    }
+
+    pcb->vidmem_present = 0;
+
+
     // if(process_slots[0] == 0 && process_slots[1] == 0 && process_slots[2] == 0){
     //     system_execute((uint8_t*)("shell")); //relaunch the shell
     //     return SUCCESS;
-    // }
+    // } <-- we need to change this logic
+
+
 
     //Jump to execute return
     uint32_t esp, ebp;
     uint16_t retStatus = (uint16_t) status;
     ebp = pcb->process_ebp;
     esp = pcb->process_esp; //set it to stack ptr in kernel space   
+
+
+    //Sagnik: why this line again? vidmap_present is the paging; why would you just invalidate that page?
+    // if (schedule_term.vidmap_present ==1){
+    //     schedule_term.vidmap_present = 0;
+    // }
+
+
+
+    //////////// we need to incorporate the schedule terminal logic here /////////////
+    /////////////////////////switch user mapping in video/////////////////////////////
     
+
     //restore ebp and esp for that of parent process
     sti();
     asm volatile(
@@ -265,6 +298,7 @@ int32_t system_execute(const uint8_t* command) {
         return -FAILURE;
     }
     pcb_t* pcb = (pcb_t*)(0x0800000 - (0x2000 * (cur_PID + 1)));
+    //Fix PID system. If its first process in the terminal, set parent PID to -1.
     pcb->pid = cur_PID;
     if(cur_PID == 0){
         pcb->parent_pid = pcb->pid; 

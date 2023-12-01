@@ -20,7 +20,9 @@ int32_t pit_handler() {
     cli();
     //send eoi to the irq line for the PIT (0)
     //Step 2: Scheduler
-    update_video_memory_paging(target_terminals->tid);
+    //update the video mem paging for the next terminal TID
+    //in the round robin schedule cycle
+    update_video_memory_paging((schedule_term->tid+1) % 3);
     next_process();
     sti();
     return SUCCESS;

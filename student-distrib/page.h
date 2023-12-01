@@ -16,7 +16,7 @@
 #define PAGE_SIZE 1024 //number of pages in dir
 #define KERNEL_IDX 1
 #define USER_IDX 32
-#define VIDMAP_IDX 34 //page directory index for vidmap
+#define VIDMAP_IDX 34  //page directory index for vidmap
 
 
 extern void page_init();

@@ -35,10 +35,13 @@ int32_t init_terms() {
     screen_x = terminals[0]->cursor_x;
     screen_y = terminals[0]->cursor_y;
     update_cursor(screen_x, screen_y);
+
+    system_exectue("shell");
+    
     return 0;
 }
 
-void terminal_switch(int32_t target_tid){
+void terminal_switch(int32_t target_tid){ // TO-DO: If pid = -1, run shell
     if(target_tid == view_term->tid){
         return;
     }
@@ -64,6 +67,11 @@ void terminal_switch(int32_t target_tid){
                                                 //denotes the terminal corresponding to current_pid, which may 
                                                 //not be a process in the target terminal. 
                                                 //So update_video_memory_paging(get_owner_terminal(current_pid)) would be wrong then
+
+    if (view_term->pid == -1) {
+        system_execute("shell");
+    }
+
 }
 
 void update_video_memory_paging(int term_id){

@@ -45,8 +45,9 @@ void next_process(){
 
 
     //Step 1
+
     pcb_t* pcb = getRunningPCB();
-    if(cur_PID){
+    if(cur_PID >= 0){
         pcb->tss_kernel_stack_ptr = tss.esp0;
         asm volatile(
             "movl %%esp, %0 \n\t"
@@ -59,16 +60,16 @@ void next_process(){
     
     //Step 2
     terminal_t* new_terminal = terminals[(cur_terminal++) % 3]; //default as 0 not -1
-    int32_t new_pid = new_terminal->pid;
+    int new_pid = new_terminal->pid;
     cur_PID = new_pid;
-    new_terminal->pid = cur_PID;
+    // new_terminal->pid = cur_PID;
     schedule_term = new_terminal;
 
     // global cur diff as new process
 
-    if(new_pid == -1){
-        system_execute("shell");
-    }
+    // if(new_pid == -1){
+    //     system_execute("shell");
+    // }
 
     //Step 3
     // left to right
@@ -140,7 +141,7 @@ int32_t system_halt(uint16_t status){
 
 
     
-    if (pcb->vidmem_present == 1) { //Vidmem in use for this process
+    if (pcb->vidmap_present == 1) { //Vidmem in use for this process
         if (schedule_term->tid == view_term->tid) {
             vidmap_page_change(VIDEO_ADDR / 0x1000, 0);//Change vidmem mapping
         }
@@ -149,7 +150,7 @@ int32_t system_halt(uint16_t status){
         }
     }
 
-    pcb->vidmem_present = 0;
+    pcb->vidmap_present = 0;
 
 
     // if(process_slots[0] == 0 && process_slots[1] == 0 && process_slots[2] == 0){
@@ -300,12 +301,21 @@ int32_t system_execute(const uint8_t* command) {
     pcb_t* pcb = (pcb_t*)(0x0800000 - (0x2000 * (cur_PID + 1)));
     //Fix PID system. If its first process in the terminal, set parent PID to -1.
     pcb->pid = cur_PID;
-    if(cur_PID == 0){
-        pcb->parent_pid = pcb->pid; 
+    // if(cur_PID == 0){
+    //     pcb->parent_pid = pcb->pid; 
+    // }
+    // else {
+    //     pcb->parent_pid = cur_PID - 1;
+    // }
+
+    if (view_term->pid == -1) {
+        pcb->parent_pid = -1;
     }
     else {
-        pcb->parent_pid = cur_PID - 1;
+        pcb->parent_pid = view_term->pid;
     }
+
+    view_term->pid = cur_PID;
 
     // initialize fd
     pcb->fd_arr[0].fops = &stdin_fops;

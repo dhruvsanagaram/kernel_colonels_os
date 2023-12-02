@@ -9,6 +9,7 @@
 #define RTC_VEC 40
 #define KEYB_IRQ_NO 0x21
 #define RTC_IRQ_NO 0x28
+#define PIT_IRQ_NO 0x20
 
 
 // typedef enum idt_entry_t {

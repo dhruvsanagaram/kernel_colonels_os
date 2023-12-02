@@ -19,7 +19,7 @@ int32_t cur_terminal = 0; //index out of 3 terminals
 */
 pcb_t* getRunningPCB() {
     pcb_t* pcb;
-    pcb = (pcb_t*)(0x800000 - 0x2000*(cur_PID+1)); //Current PCB location: 8MB - 8kB * (pid # + 1)
+    pcb = (pcb_t*)(0x800000 - 0x2000*(schedule_term->pid+1)); //Current PCB location: 8MB - 8kB * (pid # + 1)
     return pcb;
 }
 
@@ -46,8 +46,14 @@ void next_process(){
 
     //Step 1
 
+    if (schedule_term->pid == -1) {
+        terminal_t* new_terminal = &terminals[schedule_term->pid + 1 % 3]; //default as 0 not -1
+        schedule_term = new_terminal;
+        return;
+    }
+
     pcb_t* pcb = getRunningPCB();
-    if(cur_PID >= 0){
+    if(schedule_term->pid >= 0){
         pcb->tss_kernel_stack_ptr = tss.esp0;
         asm volatile(
             "movl %%esp, %0 \n\t"
@@ -59,11 +65,12 @@ void next_process(){
 
     
     //Step 2
-    terminal_t* new_terminal = &terminals[(cur_terminal++) % 3]; //default as 0 not -1
+    terminal_t* new_terminal = &terminals[schedule_term->pid + 1 % 3]; //default as 0 not -1
     int new_pid = new_terminal->pid;
-    cur_PID = new_pid;
     // new_terminal->pid = cur_PID;
     schedule_term = new_terminal;
+
+
 
     // global cur diff as new process
 
@@ -112,6 +119,21 @@ int32_t system_halt(uint16_t status){
         return -FAILURE;
     }
 
+    if (pcb->parent_pid == -1) {
+        process_slots[pcb->pid] = 0;       
+        for(i = 0; i < 8; i++){
+            pcb->fd_arr[i].inode_num = 0;
+            pcb->fd_arr[i].flags = 0;                           //Process halted so flags are set to 0 to signify file out of use
+            pcb->fd_arr[i].fpos = 0;
+            pcb->fd_arr[i].fops = &nul_fops;                     //no more file ops for FDs >:)
+        }
+
+        terminals[pcb->tid].pid = -1;
+        system_execute((uint8_t*)"shell");
+    }
+
+    terminals[pcb->tid].pid = pcb->parent_pid; // most recent process pid
+
     //Restore parent data
     // pcb_t* parent_pcb = (pcb_t*)(0x800000 - 0x2000 * (pcb->parent_pid+1));  //retrieve parent_pcb start address
     cur_PID = pcb->parent_pid;
@@ -157,7 +179,6 @@ int32_t system_halt(uint16_t status){
     //     system_execute((uint8_t*)("shell")); //relaunch the shell
     //     return SUCCESS;
     // } <-- we need to change this logic
-
 
 
     //Jump to execute return
@@ -308,14 +329,16 @@ int32_t system_execute(const uint8_t* command) {
     //     pcb->parent_pid = cur_PID - 1;
     // }
 
-    if (view_term->pid == -1) {
-        pcb->parent_pid = -1;
-    }
-    else {
-        pcb->parent_pid = view_term->pid;
-    }
-
+    // if (view_term->pid == -1) {
+    //     pcb->parent_pid = -1;
+    // }
+    // else {
+        
+    // }
+    
+    pcb->parent_pid = view_term->pid; //-1 default
     view_term->pid = cur_PID;
+    pcb->tid = view_term->tid;
 
     // initialize fd
     pcb->fd_arr[0].fops = &stdin_fops;
@@ -349,7 +372,7 @@ int32_t system_execute(const uint8_t* command) {
     tss.ss0 = KERNEL_DS;
     tss.esp0 = 0x800000 - 0x2000*(cur_PID);
 
-
+ // pushing user context
     sti();
     asm volatile(
         "pushl %0\n\t" // Move USER_DS from eax to data segment

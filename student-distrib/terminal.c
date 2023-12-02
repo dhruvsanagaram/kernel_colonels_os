@@ -65,11 +65,13 @@ void terminal_switch(int32_t target_tid){ // TO-DO: If pid = -1, run shell
     keyb_char_count = target_term->keyb_char_count;
     view_term->enterKeyPressed = enterKeyPressed;
     enterKeyPressed = target_term->enterKeyPressed;
+
     
     update_video_memory_paging(view_term->tid);
-    view_term = &terminals[target_tid];
+    
     memcpy((void*)(view_term->vidmem_data), (void*)VIDEO_ADDR, FOUR_KB);
     memcpy((void*)(VIDEO_ADDR), (void*)(target_term->vidmem_data), FOUR_KB);
+    view_term = &terminals[target_tid];
     update_video_memory_paging(schedule_term->tid);  //Should it be target_tid? Since current_pid 
                                                 //denotes the process currently being executed as determined
                                                 //by the scheduler, update_video_memory_paging(get_owner_terminal(current_pid))
@@ -110,7 +112,7 @@ void update_video_memory_paging(int term_id){
         page_tables[VIDMAP_IDX].base_addr = terminals[term_id].vidmem_data / FOUR_KB;
         page_video_map[VIDMAP_IDX].base_addr = terminals[term_id].vidmem_data / FOUR_KB;
         // page_video_map[VIDMAP_IDX].present = terminals[term_id]->vidmap_present;
-        page_video_map[VIDMAP_IDX].base_addr = VIDEO_ADDR / FOUR_KB;
+        // page_video_map[VIDMAP_IDX].base_addr = VIDEO_ADDR / FOUR_KB;
         int tar_pid = terminals[term_id].pid;
         page_video_map[VIDMAP_IDX].present = getPCBByPid(tar_pid)->vidmap_present;
     }

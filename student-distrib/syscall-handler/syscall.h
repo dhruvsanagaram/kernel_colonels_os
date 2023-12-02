@@ -54,6 +54,7 @@ typedef struct {
   uint32_t process_ebp;
   uint8_t* arg1;
   int vidmap_present;
+  int32_t tid;
 } pcb_t;
 
 

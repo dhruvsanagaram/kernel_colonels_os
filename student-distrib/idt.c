@@ -72,7 +72,7 @@ void machine_check();
 void alignment_check();
 void floating_point_SIMD();
 void onwards_20();
-void rtc_handler();
+// void rtc_handler();
 //void keyb_handler();
 
 
@@ -168,10 +168,21 @@ void init(){
     idt[RTC_IRQ_NO].dpl = 0;
     idt[RTC_IRQ_NO].present = 1;
 
-    //SET_IDT_ENTRY(idt[RTC_IRQ_NO], rtc_handler); 
+    //SS idt logic to the idt
+    idt[PIT_IRQ_NO].seg_selector = KERNEL_CS;
+    idt[PIT_IRQ_NO].present = 1;
+    idt[PIT_IRQ_NO].reserved3 = 0;
+    idt[PIT_IRQ_NO].reserved4 = 0;
+    idt[PIT_IRQ_NO].reserved2 = 1;
+    idt[PIT_IRQ_NO].reserved1 = 1;
+    idt[PIT_IRQ_NO].size = 1;
+    idt[PIT_IRQ_NO].reserved0 = 0;
+    idt[PIT_IRQ_NO].dpl = 0;
+    idt[PIT_IRQ_NO].present = 1;
+
     SET_IDT_ENTRY(idt[RTC_IRQ_NO], rtc_handler_wrapper);
-    //SET_IDT_ENTRY(idt[KEYB_IRQ_NO], keyb_handler);
     SET_IDT_ENTRY(idt[KEYB_IRQ_NO], keyboard_handler_wrapper);
+    SET_IDT_ENTRY(idt[PIT_IRQ_NO], pit_handler_wrapper);
 
     lidt(idt_desc_ptr);
 }
@@ -385,15 +396,15 @@ void onwards_20(){
  * Inputs: N/A
  * Return Value: void
  *  Function: Delegates control to rtc interrupt handler*/
-void rtc_handler(){
-    rtc_handle();
-    // asm volatile(
-    //     "pushal\n\t"
-    //     "call rtc_handle\n\t"
-    //     "popal\n\t"
-    //     "iret\n\t"
-    // );
-}
+// void rtc_handler(){
+//     rtc_handle();
+// }
+
+// void pit_handle(){
+//     pit_handler();
+// }
+
+
 
 /* void keyb_handler();
  * Inputs: N/A

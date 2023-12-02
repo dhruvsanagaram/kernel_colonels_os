@@ -78,12 +78,16 @@ void page_init() {
     for(i = 0; i < PAGE_SIZE; i++){
 
       //if the curr page is in video mem, present it
-      if(i * FOUR_KB != VIDEO_ADDR){
+      if(i * FOUR_KB != VIDEO_ADDR ){
         page_tables[i].present = 0;
       }
       else{
         page_tables[i].present= 1;
       }
+      if ((i-1) * FOUR_KB == VIDEO_ADDR || (i-2) * FOUR_KB == VIDEO_ADDR || (i-3) * FOUR_KB == VIDEO_ADDR) {
+        page_tables[i].present= 1;
+      } 
+
       page_tables[i].base_addr = i;
       page_tables[i].rw = 1;
       page_tables[i].user = 0;

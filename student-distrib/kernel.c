@@ -174,9 +174,8 @@ void entry(unsigned long magic, unsigned long addr) {
     keyb_init();
     page_init();
     populate_fops(); //fop ops ready
-    pit_init(100);
     init_terms();
-    
+    pit_init(100);
     // user_page_setup(0);
     
 

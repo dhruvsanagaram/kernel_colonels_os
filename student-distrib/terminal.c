@@ -40,6 +40,10 @@ int32_t init_terms() {
     // screen_x = terminals[0].cursor_x;
     // screen_y = terminals[0].cursor_y;
     //update_cursor(screen_x, screen_y);
+
+    keyb_char_count = terminals[0].keyb_char_count;
+    memcpy(key_buf, terminals[0].key_buf, MAX_BUF_SIZE);
+
     schedule_term = &terminals[0];
     view_term = &terminals[0];
 
@@ -57,6 +61,9 @@ void terminal_switch(int32_t target_tid){ // TO-DO: If pid = -1, run shell
     terminal_t* target_term = &terminals[target_tid];
 
     //save info about current terminal to curr_term
+    view_term->cursor_x = screen_x;
+    view_term->cursor_y = screen_y;
+
     // view_term->key_buf = key_buf;
     memcpy(view_term->key_buf,key_buf,sizeof(key_buf));
     // key_buf = target_term->key_buf;
@@ -79,6 +86,10 @@ void terminal_switch(int32_t target_tid){ // TO-DO: If pid = -1, run shell
                                                 //not be a process in the target terminal. 
                                                 //So update_video_memory_paging(get_owner_terminal(current_pid)) would be wrong then
 
+                                        
+    screen_x = view_term->cursor_x;
+    screen_y = view_term->cursor_y;
+
     if (view_term->pid == -1) {
         system_execute((uint8_t*)"shell");
     }
@@ -100,21 +111,21 @@ void update_video_memory_paging(int term_id){
     
     if(view_term->tid == term_id){          //backing store
         //do the paging for same terminal
-        page_tables[VIDMAP_IDX].base_addr = VIDEO_ADDR / FOUR_KB;
+        page_tables[184].base_addr = VIDEO_ADDR / FOUR_KB;
         //change user video memory mapping
-        page_video_map[VIDMAP_IDX].base_addr = VIDEO_ADDR / FOUR_KB;
+        page_video_map[184].base_addr = VIDEO_ADDR / FOUR_KB;
         int tar_pid = terminals[term_id].pid;
-        page_video_map[VIDMAP_IDX].present = getPCBByPid(tar_pid)->vidmap_present;
+        page_video_map[184].present = getPCBByPid(tar_pid)->vidmap_present;
         // page_video_map[VIDMAP_IDX].present = terminals[term_id]->vidmap_present;
 
     } else {                                //active store  
         //do paging for a diff terminal
-        page_tables[VIDMAP_IDX].base_addr = terminals[term_id].vidmem_data / FOUR_KB;
-        page_video_map[VIDMAP_IDX].base_addr = terminals[term_id].vidmem_data / FOUR_KB;
+        page_tables[184].base_addr = terminals[term_id].vidmem_data / FOUR_KB;
+        page_video_map[184].base_addr = terminals[term_id].vidmem_data / FOUR_KB;
         // page_video_map[VIDMAP_IDX].present = terminals[term_id]->vidmap_present;
         // page_video_map[VIDMAP_IDX].base_addr = VIDEO_ADDR / FOUR_KB;
         int tar_pid = terminals[term_id].pid;
-        page_video_map[VIDMAP_IDX].present = getPCBByPid(tar_pid)->vidmap_present;
+        page_video_map[184].present = getPCBByPid(tar_pid)->vidmap_present;
     }
 
     //flush TLB

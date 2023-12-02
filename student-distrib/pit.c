@@ -15,7 +15,7 @@ int32_t pit_init(int hz){ //Taken from OSDever for PIT
     outb(0x40, divisor & 0xFF);   /* Set low byte of divisor */
     outb(0x40, divisor >> 8);     /* Set high byte of divisor */
 
-    enable_irq(0);
+    // enable_irq(0);
     return SUCCESS;
 }
 

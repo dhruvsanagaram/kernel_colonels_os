@@ -37,9 +37,9 @@ int32_t init_terms() {
         : : : "memory"
     );
     //update global viewing buf_pos and global keyb_buf as needed
-    screen_x = terminals[0].cursor_x;
-    screen_y = terminals[0].cursor_y;
-    update_cursor(screen_x, screen_y);
+    // screen_x = terminals[0].cursor_x;
+    // screen_y = terminals[0].cursor_y;
+    //update_cursor(screen_x, screen_y);
     schedule_term = &terminals[0];
     view_term = &terminals[0];
 
@@ -61,7 +61,7 @@ void terminal_switch(int32_t target_tid){ // TO-DO: If pid = -1, run shell
     memcpy(view_term->key_buf,key_buf,sizeof(key_buf));
     // key_buf = target_term->key_buf;
     memcpy(key_buf,target_term->key_buf,sizeof(target_term->key_buf));
-    view_term->keyb_char_count = keyb_char_count;  
+    view_term->keyb_char_count = keyb_char_count; 
     keyb_char_count = target_term->keyb_char_count;
     view_term->enterKeyPressed = enterKeyPressed;
     enterKeyPressed = target_term->enterKeyPressed;

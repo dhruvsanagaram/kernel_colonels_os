@@ -3,6 +3,8 @@
 
 #include "lib.h"
 #include "terminal.h"
+#include "syscall-handler/syscall.h"
+#include "process.h"
 
 #define ASM
 
@@ -263,7 +265,7 @@ void putc(uint8_t c) {
         
     }
     update_cursor(screen_x, screen_y);
-    update_video_memory_paging(schedule_term->tid); //Restore vidmem mapping
+    update_video_memory_paging(view_term->tid);
 }
 
 

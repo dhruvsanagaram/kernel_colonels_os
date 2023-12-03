@@ -1,4 +1,84 @@
 <================================================================>
+<======================>   CHECKPOINT 5   <======================>
+<================================================================>
+Assignment:
+    MP3
+Checkpoint:
+    CP5
+Authors:
+    sagnik3, dhruvs7, arasha3, rct4
+
+<================================================================>
+                              BUG 4
+<================================================================>
+problem: Originally we assigned the parent pid to a PCB by taking the
+current pid and subtracting it by 1. This does not work because the parent
+process depends on the terminal we are currently in, and assuming that the
+parent process is stored adjacently to the current process.
+
+fix: The most recent PID must be stored in the terminal struct. So when 
+we execute a new process, we can assign the parent pid for the new process
+as the most recent process in the terminal. 
+
+resolved by: ryan, dhruv, sagnik, arash
+
+commmit (if any):
+
+Time: 2 hrs
+
+<================================================================>
+                              BUG 3
+<================================================================>
+problem: When we started a new terminal, the keyboard stopped accepting
+new interrupts.
+
+fix: We initially thought it was an issue with the PIT because the PIT
+was running constantly for scheduling and we thought that the handoff of control
+to and from the interrupt handler was not graceful, hence causing interrupts to
+be disabled. However, after checking the PIT handler we knew that it was correct, so we
+checked our terminal_switch code. We added send_eoi(1) in terminal switch so 
+that the keyboard could accept interrupts again.
+
+resolved by: ryan, dhruv, sagnik, arash
+
+commmit (if any):
+
+Time: 2 hrs
+
+
+<================================================================>
+                              BUG 2
+<================================================================>
+problem: putc was printing to the wrong terminal screen.
+
+fix: The scheduler will always constantly map the video buffer to the 
+current running terminal. However, when we type we want to print to the 
+viewing terminal. Thus, we have to map video memory to the viewing terminal
+temporarily before restoring the video memory map back to the running terminal,
+which we added in keyboard.c
+
+resolved by: ryan, dhruv, sagnik, arash
+
+commmit (if any):
+
+Time: 2 hrs
+
+<================================================================>
+                              BUG 1
+<================================================================>
+problem: When enter was pressed, execute could not be run right then
+because it was waiting for the scheduler
+
+fix: We made enterKeyPressed an attribute of the terminal whereas before
+it was global, so the state of the buffer flushing was not being done correctly
+
+resolved by: ryan, dhruv, sagnik, arash
+
+commmit (if any):
+
+Time: 2 hrs
+
+<================================================================>
 <======================>   CHECKPOINT 4   <======================>
 <================================================================>
 Assignment:

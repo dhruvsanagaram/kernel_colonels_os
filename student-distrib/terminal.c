@@ -90,12 +90,7 @@ void terminal_switch(int32_t target_tid){ // TO-DO: If pid = -1, run shell
     memcpy((void*)(view_term->vidmem_data), (void*)VIDEO_ADDR, FOUR_KB);
     memcpy((void*)(VIDEO_ADDR), (void*)(target_term->vidmem_data), FOUR_KB);
     view_term = &terminals[target_tid];
-    update_video_memory_paging(getRunningPCB()->tid);  //Should it be target_tid? Since current_pid 
-                                                //denotes the process currently being executed as determined
-                                                //by the scheduler, update_video_memory_paging(get_owner_terminal(current_pid))
-                                                //denotes the terminal corresponding to current_pid, which may 
-                                                //not be a process in the target terminal. 
-                                                //So update_video_memory_paging(get_owner_terminal(current_pid)) would be wrong then
+    update_video_memory_paging(getRunningPCB()->tid);
 
                                         
     screen_x = view_term->cursor_x;

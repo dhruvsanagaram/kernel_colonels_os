@@ -49,6 +49,9 @@ typedef struct {
   int enterKeyPressed;
   int keyb_char_count;
   char key_buf[MAX_BUF_SIZE];
+
+  int32_t esp;
+  int32_t ebp;
   
 } terminal_t;
 

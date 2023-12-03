@@ -100,6 +100,7 @@ void terminal_switch(int32_t target_tid){ // TO-DO: If pid = -1, run shell
                                         
     screen_x = view_term->cursor_x;
     screen_y = view_term->cursor_y;
+    update_cursor(screen_x,screen_y);
     send_eoi(1);
 
     if (view_term->pid == -1) {

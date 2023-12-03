@@ -10,10 +10,15 @@ int numChars = 0;
 int enterKeyPressed = 0;
 terminal_t* schedule_term;
 terminal_t* view_term;
-terminal_t terminals[3];
+terminal_t terminals[MAX_TERMS];
 
 
-
+/**
+* init_terms
+* inputs: noone
+* output: int32_t
+* side effects: initialize all the terminal structs for each term
+*/
 int32_t init_terms() {
     //populate the terminal structs in the terminals array
     // schedule_term = terminals[0];
@@ -46,10 +51,18 @@ int32_t init_terms() {
 
     schedule_term = &terminals[0];
     view_term = &terminals[0];
-    
+
+    system_execute((uint8_t*)"shell");
     return 0;
 }
 
+
+/**
+* terminal_switch
+* inputs: target_tid
+* output: n/a
+* side effects: initialize the switch for the next terminal, handles paging and keyboard interrupt
+*/
 void terminal_switch(int32_t target_tid){ // TO-DO: If pid = -1, run shell
     if(target_tid == view_term->tid){
         return;
@@ -77,7 +90,7 @@ void terminal_switch(int32_t target_tid){ // TO-DO: If pid = -1, run shell
     memcpy((void*)(view_term->vidmem_data), (void*)VIDEO_ADDR, FOUR_KB);
     memcpy((void*)(VIDEO_ADDR), (void*)(target_term->vidmem_data), FOUR_KB);
     view_term = &terminals[target_tid];
-    update_video_memory_paging(schedule_term->tid);  //Should it be target_tid? Since current_pid 
+    update_video_memory_paging(getRunningPCB()->tid);  //Should it be target_tid? Since current_pid 
                                                 //denotes the process currently being executed as determined
                                                 //by the scheduler, update_video_memory_paging(get_owner_terminal(current_pid))
                                                 //denotes the terminal corresponding to current_pid, which may 
@@ -87,16 +100,21 @@ void terminal_switch(int32_t target_tid){ // TO-DO: If pid = -1, run shell
                                         
     screen_x = view_term->cursor_x;
     screen_y = view_term->cursor_y;
-    update_cursor(screen_x,screen_y);
-    // if (view_term->pid == -1) {
-    //     system_execute((uint8_t*)"shell");
-    // }
-
     send_eoi(1);
 
-
+    if (view_term->pid == -1) {
+        system_execute((uint8_t*)"shell");
+    }
 }
 
+
+
+/**
+* update_video_memory_paging
+* inputs: term_id
+* output: n/a
+* side effects: takes the call for terminal paging and takes care of mapping
+*/
 void update_video_memory_paging(int term_id){
     /*
         1. update (save) cursor positions for switching to term_id
@@ -112,31 +130,23 @@ void update_video_memory_paging(int term_id){
     
     if(view_term->tid == term_id){          //backing store
         //do the paging for same terminal
-        page_tables[184].base_addr = VIDEO_ADDR / FOUR_KB;
+        page_tables[terminal_index_p].base_addr = VIDEO_ADDR / FOUR_KB;
         //change user video memory mapping
-        page_video_map[184].base_addr = VIDEO_ADDR / FOUR_KB;
+        page_video_map[terminal_index_p].base_addr = VIDEO_ADDR / FOUR_KB;
         int tar_pid = terminals[term_id].pid;
-        if (tar_pid == -1) {
-            page_video_map[184].present = 0;
-        }
-        else {
-            page_video_map[184].present = getPCBByPid(tar_pid)->vidmap_present;
-        }
+        page_video_map[terminal_index_p].present = getPCBByPid(tar_pid)->vidmap_present;
+        // page_video_map[184].present = getRunningPCB()->vidmap_present;
         // page_video_map[VIDMAP_IDX].present = terminals[term_id]->vidmap_present;
 
     } else {                                //active store  
         //do paging for a diff terminal
-        page_tables[184].base_addr = terminals[term_id].vidmem_data / FOUR_KB;
-        page_video_map[184].base_addr = terminals[term_id].vidmem_data / FOUR_KB;
+        page_tables[terminal_index_p].base_addr = terminals[term_id].vidmem_data / FOUR_KB;
+        page_video_map[terminal_index_p].base_addr = terminals[term_id].vidmem_data / FOUR_KB;
         // page_video_map[VIDMAP_IDX].present = terminals[term_id]->vidmap_present;
         // page_video_map[VIDMAP_IDX].base_addr = VIDEO_ADDR / FOUR_KB;
-        int tar_pid = terminals[term_id].pid;
-                if (tar_pid == -1) {
-            page_video_map[184].present = 0;
-        }
-        else {
-            page_video_map[184].present = getPCBByPid(tar_pid)->vidmap_present;
-        }
+        // int tar_pid = terminals[term_id].pid;
+        // page_video_map[184].present = getRunningPCB()->vidmap_present;
+        // page_video_map[184].present = getPCBByPid(tar_pid)->vidmap_present;
     }
 
     //flush TLB

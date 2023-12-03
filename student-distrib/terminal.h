@@ -12,6 +12,7 @@
 #define VIDMEM_TERM3_START _128MB + FOUR_MB + FOUR_KB + FOUR_KB
 #define VIDMEM_FISH _128MB + FOUR_MB + 3 * FOUR_KB
 #define MAX_TERMS 3
+#define terminal_index_p 184
 
 #include "types.h"
 

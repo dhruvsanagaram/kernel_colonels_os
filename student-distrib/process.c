@@ -19,10 +19,17 @@ int32_t cur_terminal = 0; //index out of 3 terminals
 */
 pcb_t* getRunningPCB() {
     pcb_t* pcb;
-    pcb = (pcb_t*)(0x800000 - 0x2000*(schedule_term->pid+1)); //Current PCB location: 8MB - 8kB * (pid # + 1)
+    pcb = (pcb_t*)(0x800000 - 0x2000*(cur_PID+1)); //Current PCB location: 8MB - 8kB * (pid # + 1)
     return pcb;
 }
 
+
+/**
+* getRunningPCB
+* inputs: pid - the pid
+* output: pointer to the recently running PCB calculated via runtime stack
+* side effects: none
+*/
 
 pcb_t* getPCBByPid(int pid) {
     pcb_t* pcb;
@@ -31,9 +38,15 @@ pcb_t* getPCBByPid(int pid) {
 }
 
 
-//Perform a switch to the next appropriate process for the terminal
+/**
+* next_process
+* inputs: none
+* output: none
+* side effects: Perform a switch to the next appropriate process for the terminal
+*/
+
 void next_process(){
-    /*
+    /*s
         * TODO: Video memory switching/paging
         * TODO: Scheduling
         1. save the info for the current running process 
@@ -109,6 +122,8 @@ int32_t system_halt(uint16_t status){
     cli();                                      //mask interrupts
 
     pcb_t* pcb = getRunningPCB();               //get the running PCB
+    // pcb_t* pcb = getPCBByPid(view_term->pid);               //get the running PCB
+
     if(pcb == NULL){
         sti();
         return -FAILURE;
@@ -117,17 +132,14 @@ int32_t system_halt(uint16_t status){
     if (pcb->parent_pid == -1) {
         process_slots[pcb->pid] = 0;       
         for(i = 0; i < 8; i++){
-            pcb->fd_arr[i].inode_num = 0;
-            pcb->fd_arr[i].flags = 0;                           //Process halted so flags are set to 0 to signify file out of use
-            pcb->fd_arr[i].fpos = 0;
-            pcb->fd_arr[i].fops = &nul_fops;                     //no more file ops for FDs >:)
+            close(i);
         }
 
         terminals[pcb->tid].pid = -1;
         system_execute((uint8_t*)"shell");
     }
 
-    terminals[pcb->tid].pid = pcb->parent_pid; // most recent process pid
+    terminals[pcb->tid].pid = pcb->parent_pid; // most recent process pid, not -1
 
     //Restore parent data
     // pcb_t* parent_pcb = (pcb_t*)(0x800000 - 0x2000 * (pcb->parent_pid+1));  //retrieve parent_pcb start address
@@ -150,21 +162,21 @@ int32_t system_halt(uint16_t status){
     //Close all relevant FDs
     process_slots[pcb->pid] = 0;                            //free up the slot for the recently running process
     for(i = 0; i < 8; i++){
-        pcb->fd_arr[i].inode_num = 0;
-        pcb->fd_arr[i].flags = 0;                           //Process halted so flags are set to 0 to signify file out of use
-        pcb->fd_arr[i].fpos = 0;
-        pcb->fd_arr[i].fops = &nul_fops;                     //no more file ops for FDs >:)
+        close(i);
     }
 
 
     
     if (pcb->vidmap_present == 1) { //Vidmem in use for this process
-        if (schedule_term->tid == view_term->tid) {
-            vidmap_page_change(VIDEO_ADDR / 0x1000, 0);//Change vidmem mapping
-        }
-        else {
-            vidmap_page_change(schedule_term->vidmem_data / 0x1000, 0);
-        }
+        // if (schedule_term->tid == view_term->tid) {
+        //     vidmap_page_change(VIDEO_ADDR / 0x1000, 0);//Change vidmem mapping
+        // }
+        // else {
+        //     vidmap_page_change(schedule_term->vidmem_data / 0x1000, 0);
+        // }
+        
+        vidmap_page_change(VIDEO_ADDR / 0x1000, 0);//Change vidmem mapping
+
     }
 
     pcb->vidmap_present = 0;

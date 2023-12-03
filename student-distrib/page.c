@@ -96,7 +96,7 @@ void page_init() {
       page_tables[i].accessed = 0; 
       page_tables[i].dirty = 0; 
       page_tables[i].global = 0; 
-      page_tables[i].avail = 0;     
+      page_tables[i].avail = 0;    
     }
 
 

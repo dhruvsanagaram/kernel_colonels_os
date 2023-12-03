@@ -45,15 +45,9 @@ void next_process(){
 
 
     //Step 1
-
-    if (schedule_term->pid == -1) {
-        terminal_t* new_terminal = &terminals[schedule_term->pid + 1 % 3]; //default as 0 not -1
-        schedule_term = new_terminal;
-        return;
-    }
-
-    pcb_t* pcb = getRunningPCB();
+    
     if(schedule_term->pid >= 0){
+        pcb_t* pcb = getRunningPCB();
         pcb->tss_kernel_stack_ptr = tss.esp0;
         asm volatile(
             "movl %%esp, %0 \n\t"
@@ -62,10 +56,9 @@ void next_process(){
         );
     }
 
-
     
     //Step 2
-    terminal_t* new_terminal = &terminals[schedule_term->pid + 1 % 3]; //default as 0 not -1
+    terminal_t* new_terminal = &terminals[schedule_term->tid + 1 % 3]; //default as 0 not -1
     int new_pid = new_terminal->pid;
     // new_terminal->pid = cur_PID;
     schedule_term = new_terminal;
@@ -74,12 +67,13 @@ void next_process(){
 
     // global cur diff as new process
 
-    // if(new_pid == -1){
-    //     system_execute("shell");
-    // }
+     if (new_pid == -1) {
+         system_execute((uint8_t*)"shell");
+     }
 
     //Step 3
     // left to right
+
     pcb_t* new_term_PCB = getPCBByPid(new_pid);
     asm volatile(
             "movl %0, %%esp \n\t" 
@@ -116,6 +110,7 @@ int32_t system_halt(uint16_t status){
 
     pcb_t* pcb = getRunningPCB();               //get the running PCB
     if(pcb == NULL){
+        sti();
         return -FAILURE;
     }
 

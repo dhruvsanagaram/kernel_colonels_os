@@ -176,6 +176,7 @@ void entry(unsigned long magic, unsigned long addr) {
     populate_fops(); //fop ops ready
     init_terms();
     pit_init(100);
+    // system_execute((uint8_t*)"shell");
     // user_page_setup(0);
     
 
